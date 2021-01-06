@@ -9,4 +9,40 @@
 
     <string name="hello_first_fragment">Hello first fragment</string>
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
+
+    <!-- FirstFragment -->
+    <string name="not_logged_in">Please log in to the Twitter.</string>
+    <string name="login">Login</string>
+
+    <string name="clear">Clear</string>
+    <string name="icon">icon</string>
+    <string name="prefix">Prefix</string>
+    <string name="tweet">Tweet</string>
+    <string name="suffix">Suffix</string>
+
+    <string name="delete_tweet">Delete</string>
+    <string name="tweet_delete_dialog">Delete my tweet</string>
+
+    <!-- Preference -->
+    <string name="title_activity_settings">SettingsActivity</string>
+
+    <string name="auth">Auth</string>
+    <string name="auth_summary">Information required for authentication</string>
+
+    <string name="auth_client_key">Client key</string>
+    <string name="auth_client_secret">Client secret</string>
+    <string name="auth_access_key">Access key</string>
+    <string name="auth_access_secret">Access secret</string>
+    <string name="auth_client_key_default">Default client key</string>
+    <string name="auth_client_secret_default">Default client secret</string>
+    <string name="auth_access_key_default">Default access key</string>
+    <string name="auth_access_secret_default">Default access secret</string>
+
+    <string name="profile_image_url_https">Icon URL</string>
+    <string name="profile_image_url_https_default">Default icon url</string>
+
+    <string name="app">App</string>
+    <string name="app_summary">App settings</string>
+
+    <string name="is_debug_mode">Debug mode</string>
 </resources>

@@ -1,0 +1,60 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory
+        app:summary="@string/auth_summary"
+        app:title="@string/auth">
+
+        <EditTextPreference
+            android:defaultValue="@string/auth_client_key_default"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            app:key="pref_auth_client_key"
+            app:title="@string/auth_client_key"
+            app:useSimpleSummaryProvider="true" />
+
+        <EditTextPreference
+            android:defaultValue="@string/auth_client_secret_default"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            app:key="pref_auth_client_secret"
+            app:title="@string/auth_client_secret"
+            app:useSimpleSummaryProvider="true" />
+
+        <EditTextPreference
+            android:defaultValue="@string/auth_access_key_default"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            app:key="pref_auth_access_key"
+            app:title="@string/auth_access_key"
+            app:useSimpleSummaryProvider="true" />
+
+        <EditTextPreference
+            android:defaultValue="@string/auth_access_secret_default"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            app:key="pref_auth_access_secret"
+            app:title="@string/auth_access_secret"
+            app:useSimpleSummaryProvider="true" />
+
+        <EditTextPreference
+            android:defaultValue="@string/profile_image_url_https_default"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            app:key="pref_profile_image_url_https"
+            app:title="@string/profile_image_url_https"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:summary="@string/app_summary"
+        app:title="@string/app">
+
+        <SwitchPreferenceCompat
+            app:key="pref_is_debug_mode"
+            app:title="@string/is_debug_mode" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

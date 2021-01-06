@@ -15,6 +15,12 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        // 環境変数から読み込み
+        manifestPlaceholders = [
+                OTOWA_CONSUMER_KEY   : System.getenv("OTOWA_CONSUMER_KEY"),
+                OTOWA_CONSUMER_SECRET: System.getenv("OTOWA_CONSUMER_SECRET")
+        ]
     }
 
     buildTypes {
@@ -41,6 +47,7 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
     implementation 'androidx.navigation:navigation-fragment-ktx:2.2.2'
     implementation 'androidx.navigation:navigation-ui-ktx:2.2.2'
+    implementation 'androidx.preference:preference:1.1.1'
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
@@ -48,5 +55,11 @@ dependencies {
     // for Twitter4j
     implementation 'org.twitter4j:twitter4j-core:4.0.7'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.5'
+
+    // Preference
+    implementation "androidx.preference:preference-ktx:1.1.1"
+
+    // Image
+    implementation 'com.squareup.picasso:picasso:2.71828'
 
 }
