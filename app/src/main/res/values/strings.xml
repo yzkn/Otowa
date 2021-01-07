@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">Otowa</string>
     <string name="action_settings">Settings</string>
+    <string name="action_twitter_api">Twitter API</string>
+    <string name="action_twitter_profile_image">Reload my icon</string>
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>
     <string name="second_fragment_label">Second Fragment</string>
@@ -16,6 +18,7 @@
 
     <string name="clear">Clear</string>
     <string name="icon">icon</string>
+    <string name="locate">Locate</string>
     <string name="prefix">Prefix</string>
     <string name="tweet">Tweet</string>
     <string name="suffix">Suffix</string>
@@ -29,12 +32,12 @@
     <string name="auth">Auth</string>
     <string name="auth_summary">Information required for authentication</string>
 
-    <string name="auth_client_key">Client key</string>
-    <string name="auth_client_secret">Client secret</string>
+    <string name="auth_consumer_key">Consumer key</string>
+    <string name="auth_consumer_secret">Consumer secret</string>
     <string name="auth_access_key">Access key</string>
     <string name="auth_access_secret">Access secret</string>
-    <string name="auth_client_key_default">Default client key</string>
-    <string name="auth_client_secret_default">Default client secret</string>
+    <string name="auth_consumer_key_default">Default consumer key</string>
+    <string name="auth_consumer_secret_default">Default consumer secret</string>
     <string name="auth_access_key_default">Default access key</string>
     <string name="auth_access_secret_default">Default access secret</string>
 

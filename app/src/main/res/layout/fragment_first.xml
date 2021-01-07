@@ -37,6 +37,12 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
+            <Button
+                android:id="@+id/button_clear"
+                android:layout_width="96dp"
+                android:layout_height="96dp"
+                android:text="@string/clear" />
+
             <EditText
                 android:id="@+id/tweet_prefix"
                 android:layout_width="0dp"
@@ -77,10 +83,10 @@
             android:orientation="horizontal">
 
             <Button
-                android:id="@+id/button_clear"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:text="@string/clear" />
+                android:id="@+id/button_locate"
+                android:layout_width="96dp"
+                android:layout_height="96dp"
+                android:text="@string/locate" />
 
             <EditText
                 android:id="@+id/tweet_suffix"
@@ -95,8 +101,8 @@
 
             <Button
                 android:id="@+id/button_tweet"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
+                android:layout_width="96dp"
+                android:layout_height="96dp"
                 android:text="@string/tweet" />
         </LinearLayout>
     </LinearLayout>

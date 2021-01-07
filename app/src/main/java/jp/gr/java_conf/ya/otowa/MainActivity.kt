@@ -31,6 +31,10 @@ class MainActivity : AppCompatActivity() {
                 startActivity(Intent(applicationContext, SettingsActivity::class.java))
                 return true;
             }
+            R.id.action_twitter_profile_image -> {
+                // プロフィール画像のURLを再取得
+                return true;
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }

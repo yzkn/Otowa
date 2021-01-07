@@ -6,19 +6,19 @@
         app:title="@string/auth">
 
         <EditTextPreference
-            android:defaultValue="@string/auth_client_key_default"
+            android:defaultValue="@string/auth_consumer_key_default"
             android:selectAllOnFocus="true"
             android:singleLine="true"
-            app:key="pref_auth_client_key"
-            app:title="@string/auth_client_key"
+            app:key="pref_auth_consumer_key"
+            app:title="@string/auth_consumer_key"
             app:useSimpleSummaryProvider="true" />
 
         <EditTextPreference
-            android:defaultValue="@string/auth_client_secret_default"
+            android:defaultValue="@string/auth_consumer_secret_default"
             android:selectAllOnFocus="true"
             android:singleLine="true"
-            app:key="pref_auth_client_secret"
-            app:title="@string/auth_client_secret"
+            app:key="pref_auth_consumer_secret"
+            app:title="@string/auth_consumer_secret"
             app:useSimpleSummaryProvider="true" />
 
         <EditTextPreference

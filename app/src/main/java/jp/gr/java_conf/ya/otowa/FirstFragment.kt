@@ -2,15 +2,17 @@ package jp.gr.java_conf.ya.otowa
 
 import android.app.AlertDialog
 import android.app.Dialog
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.BatteryManager
+import android.os.BatteryManager.*
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -19,8 +21,10 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.squareup.picasso.Picasso
-import kotlinx.coroutines.*
-import twitter4j.Status
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import twitter4j.Twitter
 import twitter4j.TwitterException
 import twitter4j.TwitterFactory
@@ -33,16 +37,37 @@ import twitter4j.conf.ConfigurationBuilder
 class FirstFragment : Fragment() {
 
     // 定数
-    val CALLBACK_URL = "callback://"
+    val callbackUrl = "callback://"
 
     // 変数
-    var is_debug_mode = false
+    var isDebugMode = false
     var packageNameString = ""
 
-    lateinit var oauth_twitter: Twitter
-    lateinit var post_twitter: Twitter
+    lateinit var oauthTwitter: Twitter
+    lateinit var apiTwitter: Twitter
+    lateinit var createdView: View
 
     // 初期化処理
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        menu.clear()
+        inflater.inflate(R.menu.menu_main, menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item?.itemId) {
+            R.id.action_twitter_profile_image -> {
+                reloadProfileImage()
+                return false
+            }
+        }
+        return true
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -55,30 +80,35 @@ class FirstFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         packageNameString = activity?.packageName.toString()
+        createdView = view
+        initialize()
+    }
+
+    private fun initialize() {
+        val view = createdView
 
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
-        is_debug_mode = sharedPreferences.getBoolean("pref_is_debug_mode", false)
+        isDebugMode = sharedPreferences.getBoolean("pref_is_debug_mode", false)
 
         val accessKey = sharedPreferences.getString("pref_auth_access_key", "") ?: ""
         val accessSecret = sharedPreferences.getString("pref_auth_access_secret", "") ?: ""
-        if (is_debug_mode) {
+        if (isDebugMode) {
             Log.v(packageNameString, "AK: $accessKey")
             Log.v(packageNameString, "AS: $accessSecret")
         }
 
         // UIパーツの取得
-        val buttonFirst = view.findViewById<Button>(R.id.button_first);
-        val linearLayoutFirst = view.findViewById<LinearLayout>(R.id.linear_layout_first);
-        val linearLayoutTweet = view.findViewById<LinearLayout>(R.id.linear_layout_tweet);
+        val linearLayoutFirst = view.findViewById<LinearLayout>(R.id.linear_layout_first)
+        val linearLayoutTweet = view.findViewById<LinearLayout>(R.id.linear_layout_tweet)
 
         // 認証済みか否かで、UIの可視状態を切り替え
         if (accessKey.length > 40 && accessSecret.length > 40) {
             linearLayoutFirst.visibility = View.GONE;
             linearLayoutTweet.visibility = View.VISIBLE;
 
-
             val iconImage = view.findViewById<ImageView>(R.id.icon_image)
             val buttonClear = view.findViewById<Button>(R.id.button_clear)
+            val buttonLocate = view.findViewById<Button>(R.id.button_locate)
             val buttonTweet = view.findViewById<Button>(R.id.button_tweet)
 
             // EditText群に対して設定
@@ -122,6 +152,9 @@ class FirstFragment : Fragment() {
                     editTextItem.text.clear()
                 }
             }
+            buttonLocate.setOnClickListener {
+                // TODO 逆ジオコーディング
+            }
             buttonTweet.setOnClickListener {
                 view.findViewById<Button>(R.id.button_tweet).isEnabled = false
 
@@ -131,77 +164,32 @@ class FirstFragment : Fragment() {
                     }
                 }
                 val tweettext = buf.toString()
-                if (tweettext != "") {
-                    try {
-                        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-
-                            //asyncOperation
-                            async(Dispatchers.IO) {
-                                getTw().updateStatus(tweettext)
-                            }.await()
-                            withContext(Dispatchers.Main) {
-                                Toast.makeText(
-                                    activity,
-                                    "Tweeted.",
-                                    Toast.LENGTH_LONG
-                                ).show()
-                            }
-                        }
-                    } catch (e: TwitterException) {
-                        Toast.makeText(
-                            activity,
-                            e.toString(),
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                }
+                updateTweet(tweettext)
 
                 view.findViewById<Button>(R.id.button_tweet).isEnabled = true
                 editTextList[1].text.clear()
             }
 
+            changeScreenBrightness()
+
             iconImage.setOnLongClickListener {
-                var statusList: MutableList<Status>
                 var stringList: MutableList<String>
                 viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
                     val tweetList = withContext(Dispatchers.IO) { getTw().userTimeline }
-                    statusList = mutableListOf<Status>()
                     stringList = mutableListOf<String>()
                     for (tweet in tweetList) {
-                        statusList.add(tweet)
                         stringList.add(tweet.text)
                     }
 
                     withContext(Dispatchers.Main) {
-                        AlertDialog.Builder(activity) // FragmentではActivityを取得して生成
+                        AlertDialog.Builder(activity)
                             .setTitle(getString(R.string.tweet_delete_dialog))
-                            .setItems(stringList.toTypedArray()) { dialog, which ->
-                                // ツイートが選択された場合
-                                AlertDialog.Builder(activity) // FragmentではActivityを取得して生成
+                            .setItems(stringList.toTypedArray()) { _, which ->
+                                AlertDialog.Builder(activity)
                                     .setTitle(getString(R.string.tweet_delete_dialog))
                                     .setMessage(stringList[which])
-                                    .setPositiveButton(getString(R.string.delete_tweet)) { dialog2, which2 ->
-                                        // ツイートを削除する
-                                        try {
-                                            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-                                                async(Dispatchers.IO) {
-                                                    getTw().destroyStatus(tweetList[which].id)
-                                                }.await()
-                                                withContext(Dispatchers.Main) {
-                                                    Toast.makeText(
-                                                        activity,
-                                                        "Deleted.",
-                                                        Toast.LENGTH_LONG
-                                                    ).show()
-                                                }
-                                            }
-                                        } catch (e: TwitterException) {
-                                            Toast.makeText(
-                                                activity,
-                                                e.toString(),
-                                                Toast.LENGTH_LONG
-                                            ).show()
-                                        }
+                                    .setPositiveButton(getString(R.string.delete_tweet)) { _, _ ->
+                                        deleteTweet(tweetList[which].id)
                                     }
                                     .show()
                             }
@@ -214,7 +202,7 @@ class FirstFragment : Fragment() {
             val profileImageUrlHttps =
                 sharedPreferences.getString("pref_profile_image_url_https", "")
                     ?: ""
-            if (is_debug_mode) {
+            if (isDebugMode) {
                 Log.v(packageNameString, "profileImageUrlHttps: $profileImageUrlHttps")
             }
 
@@ -224,11 +212,41 @@ class FirstFragment : Fragment() {
                     .into(iconImage);
             }
         } else {
+            val buttonFirst = view.findViewById<Button>(R.id.button_first)
             buttonFirst.setOnClickListener {
                 getRequestToken()
             }
             linearLayoutFirst.visibility = View.VISIBLE;
             linearLayoutTweet.visibility = View.GONE;
+        }
+    }
+
+    private fun changeScreenBrightness() {
+        if (isDebugMode) {
+            Log.v(packageNameString, "changeScreenBrightness()")
+        }
+
+        val batteryInfo: Intent = activity?.registerReceiver(
+            null, IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+        ) ?: return
+        if (batteryInfo != null) {
+            val plugged = batteryInfo.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)
+            if (isDebugMode) {
+                Log.v(packageNameString, "changeScreenBrightness() plugged: $plugged")
+            }
+
+            when (plugged) { // if (isDebugMode) BATTERY_PLUGGED_AC else plugged
+                BATTERY_PLUGGED_AC, BATTERY_PLUGGED_USB, BATTERY_PLUGGED_WIRELESS -> {
+                    val lp: WindowManager.LayoutParams? = activity?.getWindow()?.getAttributes()
+                    if (lp != null) {
+                        lp.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL
+                        activity?.getWindow()?.setAttributes(lp)
+                        if (isDebugMode) {
+                            Log.v(packageNameString, "BRIGHTNESS_OVERRIDE_FULL")
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -250,8 +268,17 @@ class FirstFragment : Fragment() {
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
         val consumerKey = sharedPreferences.getString("pref_auth_consumer_key", "") ?: ""
         val consumerSecret = sharedPreferences.getString("pref_auth_consumer_secret", "") ?: ""
+        if (isDebugMode) {
+            Log.v(packageNameString, "sharedPreferences CK: $consumerKey")
+            Log.v(packageNameString, "sharedPreferences CS: $consumerSecret")
+        }
         if (consumerKey.length > 15 && consumerSecret.length > 40) {
             return Pair(consumerKey, consumerSecret)
+        }
+
+        if (isDebugMode) {
+            Log.v(packageNameString, "env CK: " + getMetadata("OTOWA_CONSUMER_KEY"))
+            Log.v(packageNameString, "env CS: " + getMetadata("OTOWA_CONSUMER_SECRET"))
         }
         return Pair(getMetadata("OTOWA_CONSUMER_KEY"), getMetadata("OTOWA_CONSUMER_SECRET"))
     }
@@ -260,7 +287,7 @@ class FirstFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
             val consumerKey = getCkCs().first
             val consumerSecret = getCkCs().second
-            if (is_debug_mode) {
+            if (isDebugMode) {
                 Log.v(packageNameString, "CK: $consumerKey")
                 Log.v(packageNameString, "CS: $consumerSecret")
             }
@@ -271,15 +298,15 @@ class FirstFragment : Fragment() {
                 .setOAuthConsumerSecret(consumerSecret)
             val config = builder.build()
             val factory = TwitterFactory(config)
-            oauth_twitter = factory.instance
+            oauthTwitter = factory.instance
 
             try {
-                val requestToken = oauth_twitter.oAuthRequestToken
+                val requestToken = oauthTwitter.oAuthRequestToken
                 withContext(Dispatchers.Main) {
                     genTwitterWebviewDialog(requestToken.authorizationURL)
                 }
             } catch (e: IllegalStateException) {
-                if (is_debug_mode) {
+                if (isDebugMode) {
                     Log.e("ERROR: ", e.toString())
                 }
             }
@@ -290,7 +317,7 @@ class FirstFragment : Fragment() {
     lateinit var twitterDialog: Dialog
 
     private suspend fun genTwitterWebviewDialog(url: String) {
-        if (is_debug_mode) {
+        if (isDebugMode) {
             Log.v(packageNameString, "genTwitterWebviewDialog() url: $url")
         }
 
@@ -312,8 +339,8 @@ class FirstFragment : Fragment() {
             view: WebView?,
             request: WebResourceRequest?
         ): Boolean {
-            if (request?.url.toString().startsWith(CALLBACK_URL)) {
-                if (is_debug_mode) {
+            if (request?.url.toString().startsWith(callbackUrl)) {
+                if (isDebugMode) {
                     Log.v(
                         packageNameString,
                         "shouldOverrideUrlLoading() url: " + request?.url.toString()
@@ -321,7 +348,7 @@ class FirstFragment : Fragment() {
                 }
                 getAccessToken(request?.url.toString())
 
-                if (request?.url.toString().contains(CALLBACK_URL)) {
+                if (request?.url.toString().contains(callbackUrl)) {
                     twitterDialog.dismiss()
                 }
                 return true
@@ -331,7 +358,7 @@ class FirstFragment : Fragment() {
     }
 
     private fun getAccessToken(url: String) {
-        if (is_debug_mode) {
+        if (isDebugMode) {
             Log.v(packageNameString, "getAccessToken() url: $url")
         }
 
@@ -339,9 +366,9 @@ class FirstFragment : Fragment() {
         val oauthVerifier = uri.getQueryParameter("oauth_verifier") ?: ""
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
             val accToken = withContext(Dispatchers.IO) {
-                oauth_twitter.getOAuthAccessToken(oauthVerifier)
+                oauthTwitter.getOAuthAccessToken(oauthVerifier)
             }
-            if (is_debug_mode) {
+            if (isDebugMode) {
                 Log.v(packageNameString, "AK: ${accToken.token}")
                 Log.v(packageNameString, "AK: ${accToken.tokenSecret}")
             }
@@ -352,7 +379,7 @@ class FirstFragment : Fragment() {
                 putString("pref_auth_access_secret", accToken.tokenSecret)
                 putString(
                     "pref_profile_image_url_https",
-                    oauth_twitter.verifyCredentials().profileImageURLHttps
+                    oauthTwitter.verifyCredentials().profileImageURLHttps
                 )
 
                 commit()
@@ -363,24 +390,29 @@ class FirstFragment : Fragment() {
     }
 
     private suspend fun showUserInfo() {
-        val usr = withContext(Dispatchers.IO) { oauth_twitter.verifyCredentials() }
-        if (is_debug_mode) {
+        val usr = withContext(Dispatchers.IO) { oauthTwitter.verifyCredentials() }
+        if (isDebugMode) {
             Log.v("twitter", usr.name)
             Log.v("twitter", usr.screenName)
             Log.v("twitter", usr.profileImageURLHttps)
         }
+
+        // 画面再読み込み
+        withContext(Dispatchers.Main) {
+            initialize()
+        }
     }
 
     private fun getTw(): Twitter {
-        if (::post_twitter.isInitialized) {
-            if (post_twitter != null) {
-                return post_twitter
+        if (::apiTwitter.isInitialized) {
+            if (apiTwitter != null) {
+                return apiTwitter
             }
         }
 
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
         val builder = ConfigurationBuilder()
-        builder.setDebugEnabled(is_debug_mode)
+        builder.setDebugEnabled(isDebugMode)
             .setOAuthConsumerKey(getCkCs().first)
             .setOAuthConsumerSecret(getCkCs().second)
             .setOAuthAccessToken(
@@ -395,8 +427,82 @@ class FirstFragment : Fragment() {
         val factory = TwitterFactory(config)
 
         // キャッシュ
-        post_twitter = factory.getInstance()
+        apiTwitter = factory.getInstance()
 
-        return post_twitter
+        return apiTwitter
+    }
+
+    private fun reloadProfileImage() {
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+            val usr = withContext(Dispatchers.IO) { getTw().verifyCredentials() }
+
+            val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
+            with(sharedPreferences.edit()) {
+                putString(
+                    "pref_profile_image_url_https",
+                    usr.profileImageURLHttps
+                )
+
+                commit()
+            }
+
+            withContext(Dispatchers.Main) {
+                Toast.makeText(
+                    activity,
+                    "Reloaded.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+    }
+
+    private fun updateTweet(tweettext: String) {
+        if (tweettext != "") {
+            try {
+                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+                    async(Dispatchers.IO) {
+                        getTw().updateStatus(tweettext)
+                    }.await()
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            activity,
+                            "Tweeted.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+            } catch (e: TwitterException) {
+                Toast.makeText(
+                    activity,
+                    e.toString(),
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+    }
+
+    private fun deleteTweet(statusId: Long) {
+        if (statusId > -1) {
+            try {
+                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+                    async(Dispatchers.IO) {
+                        getTw().destroyStatus(statusId)
+                    }.await()
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            activity,
+                            "Deleted.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+            } catch (e: TwitterException) {
+                Toast.makeText(
+                    activity,
+                    e.toString(),
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
     }
 }
