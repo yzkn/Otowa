@@ -38,6 +38,13 @@ android {
     }
 }
 
+// DB
+allprojects {
+    repositories {
+        maven { url 'https://jitpack.io' }
+    }
+}
+
 dependencies {
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
@@ -62,4 +69,6 @@ dependencies {
     // Image
     implementation 'com.squareup.picasso:picasso:2.71828'
 
+    // DB
+    implementation 'com.github.abnerescocio:assets-sqlite:1.4.1'
 }

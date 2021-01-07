@@ -46,6 +46,7 @@ class FirstFragment : Fragment() {
     lateinit var oauthTwitter: Twitter
     lateinit var apiTwitter: Twitter
     lateinit var createdView: View
+    lateinit var cityDbController: AppDBController
 
     // 初期化処理
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,7 +60,7 @@ class FirstFragment : Fragment() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item?.itemId) {
+        when (item.itemId) {
             R.id.action_twitter_profile_image -> {
                 reloadProfileImage()
                 return false
@@ -82,6 +83,12 @@ class FirstFragment : Fragment() {
         packageNameString = activity?.packageName.toString()
         createdView = view
         initialize()
+
+        initDb()
+    }
+
+    private fun initDb() {
+        cityDbController = AppDBController(createdView.context)
     }
 
     private fun initialize() {
@@ -153,7 +160,7 @@ class FirstFragment : Fragment() {
                 }
             }
             buttonLocate.setOnClickListener {
-                // TODO 逆ジオコーディング
+                reverseGeocode()
             }
             buttonTweet.setOnClickListener {
                 view.findViewById<Button>(R.id.button_tweet).isEnabled = false
@@ -229,21 +236,19 @@ class FirstFragment : Fragment() {
         val batteryInfo: Intent = activity?.registerReceiver(
             null, IntentFilter(Intent.ACTION_BATTERY_CHANGED)
         ) ?: return
-        if (batteryInfo != null) {
-            val plugged = batteryInfo.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)
-            if (isDebugMode) {
-                Log.v(packageNameString, "changeScreenBrightness() plugged: $plugged")
-            }
+        val plugged = batteryInfo.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)
+        if (isDebugMode) {
+            Log.v(packageNameString, "changeScreenBrightness() plugged: $plugged")
+        }
 
-            when (plugged) { // if (isDebugMode) BATTERY_PLUGGED_AC else plugged
-                BATTERY_PLUGGED_AC, BATTERY_PLUGGED_USB, BATTERY_PLUGGED_WIRELESS -> {
-                    val lp: WindowManager.LayoutParams? = activity?.getWindow()?.getAttributes()
-                    if (lp != null) {
-                        lp.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL
-                        activity?.getWindow()?.setAttributes(lp)
-                        if (isDebugMode) {
-                            Log.v(packageNameString, "BRIGHTNESS_OVERRIDE_FULL")
-                        }
+        when (plugged) { // if (isDebugMode) BATTERY_PLUGGED_AC else plugged
+            BATTERY_PLUGGED_AC, BATTERY_PLUGGED_USB, BATTERY_PLUGGED_WIRELESS -> {
+                val lp: WindowManager.LayoutParams? = activity?.getWindow()?.getAttributes()
+                if (lp != null) {
+                    lp.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL
+                    activity?.getWindow()?.setAttributes(lp)
+                    if (isDebugMode) {
+                        Log.v(packageNameString, "BRIGHTNESS_OVERRIDE_FULL")
                     }
                 }
             }
@@ -405,9 +410,7 @@ class FirstFragment : Fragment() {
 
     private fun getTw(): Twitter {
         if (::apiTwitter.isInitialized) {
-            if (apiTwitter != null) {
-                return apiTwitter
-            }
+            return apiTwitter
         }
 
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
@@ -504,5 +507,14 @@ class FirstFragment : Fragment() {
                 ).show()
             }
         }
+    }
+
+    private fun reverseGeocode(){
+        // GPS
+
+
+        // 逆ジオコーディング
+        val cityName = cityDbController.searchCity(35.0, 138.0)
+        Log.v(packageNameString, "City: $cityName")
     }
 }
