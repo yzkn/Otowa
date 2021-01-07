@@ -6,17 +6,19 @@ import android.database.sqlite.SQLiteDatabase
 import java.lang.Exception
 
 open class AppDBController(context: Context) {
+
+    lateinit var cursor: Cursor
+
     private val sqLiteDatabase: SQLiteDatabase?
 
     init {
         val appAssetsSQLite = AppAssetsSQLite(context)
-        sqLiteDatabase = appAssetsSQLite.readableDatabase
+        sqLiteDatabase = appAssetsSQLite.writableDatabase
     }
 
     fun searchCity(lat: Double, lng: Double): String? {
 
         var cityName: String = ""
-        lateinit var cursor: Cursor
         try {
             val selectQql: String =
                 " SELECT * , ( abs ( ? - 緯度 ) + abs ( ? - 経度 ) ) as d FROM city ORDER BY d ASC LIMIT 1 ; "
@@ -29,7 +31,9 @@ open class AppDBController(context: Context) {
             }
         }catch (e: Exception){
         } finally {
-            cursor?.close()
+            if (::cursor.isInitialized) {
+                cursor?.close()
+            }
         }
         return cityName
     }
