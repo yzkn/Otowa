@@ -20,6 +20,7 @@ import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
+import com.google.android.gms.location.LocationResult
 import com.squareup.picasso.Picasso
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -29,6 +30,7 @@ import twitter4j.Twitter
 import twitter4j.TwitterException
 import twitter4j.TwitterFactory
 import twitter4j.conf.ConfigurationBuilder
+import java.lang.Double.parseDouble
 
 
 /**
@@ -509,12 +511,26 @@ class FirstFragment : Fragment() {
         }
     }
 
-    private fun reverseGeocode(){
-        // GPS
+    private fun reverseGeocode() {
+        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
+        val latString = sharedPreferences.getString("pref_current_latitude", "") ?: "-91.0"
+        val lonString = sharedPreferences.getString("pref_current_longitude", "") ?: "-181.0"
+        if (isDebugMode) {
+            Log.v(packageNameString, "latString: ${latString}")
+            Log.v(packageNameString, "lonString: ${lonString}")
+        }
+        val currentLatitude = parseDouble(latString)
+        val currentLongitude = parseDouble(lonString)
 
+        // 測位に成功している場合
+        if (currentLatitude >= -90.0 && currentLongitude >= -180.0) {
+            // 逆ジオコーディング
+            val cityName = cityDbController.searchCity(currentLatitude, currentLongitude)
+            Log.v(packageNameString, "City: $cityName")
 
-        // 逆ジオコーディング
-        val cityName = cityDbController.searchCity(35.0, 138.0)
-        Log.v(packageNameString, "City: $cityName")
+            if(!cityName.isNullOrEmpty()) {
+                view?.findViewById<EditText>(R.id.tweet_main)?.setText(cityName)
+            }
+        }
     }
 }
