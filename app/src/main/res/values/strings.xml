@@ -19,6 +19,7 @@
     <string name="clear">Clear</string>
     <string name="icon">icon</string>
     <string name="locate">Locate</string>
+    <string name="locate_unknown">(Locate)</string>
     <string name="prefix">Prefix</string>
     <string name="tweet">Tweet</string>
     <string name="suffix">Suffix</string>

@@ -86,7 +86,7 @@
                 android:id="@+id/button_locate"
                 android:layout_width="96dp"
                 android:layout_height="96dp"
-                android:text="@string/locate" />
+                android:text="@string/locate_unknown" />
 
             <EditText
                 android:id="@+id/tweet_suffix"

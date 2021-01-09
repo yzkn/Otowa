@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import android.view.WindowManager
+import android.widget.Button
 import androidx.core.app.ActivityCompat
 import androidx.preference.PreferenceManager
 import com.google.android.gms.location.*
@@ -50,13 +51,10 @@ class MainActivity : AppCompatActivity() {
             null, IntentFilter(Intent.ACTION_BATTERY_CHANGED)
         ) ?: return
 
-        val plugged = batteryInfo.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-        when (plugged) {
+        when (batteryInfo.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)) {
             BatteryManager.BATTERY_PLUGGED_AC, BatteryManager.BATTERY_PLUGGED_USB, BatteryManager.BATTERY_PLUGGED_WIRELESS -> {
-
-                fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-
                 var updatedCount = 0
                 locationCallback = object : LocationCallback() {
                     override fun onLocationResult(locationResult: LocationResult?) {
@@ -64,15 +62,25 @@ class MainActivity : AppCompatActivity() {
                         for (location in locationResult.locations) {
                             updatedCount++
                             if (isDebugMode) {
-                                Log.v(packageNameString, "GPS ${updatedCount.toString()} ${location.latitude} , ${location.longitude}"
+                                Log.v(
+                                    packageNameString,
+                                    "GPS ${updatedCount.toString()} ${location.latitude} , ${location.longitude}"
                                 )
                             }
 
-                            with(PreferenceManager.getDefaultSharedPreferences(application).edit()) {
+                            with(
+                                PreferenceManager.getDefaultSharedPreferences(application).edit()
+                            ) {
                                 putString("pref_current_latitude", location.latitude.toString())
                                 putString("pref_current_longitude", location.longitude.toString())
 
                                 commit()
+                            }
+
+                            // 測位に成功したらボタンのテキストを更新する
+                            val buttonLocate = findViewById<Button>(R.id.button_locate)
+                            if(buttonLocate != null){
+                                buttonLocate.text = getString(R.string.locate)
                             }
                         }
                     }
@@ -111,12 +119,9 @@ class MainActivity : AppCompatActivity() {
             null, IntentFilter(Intent.ACTION_BATTERY_CHANGED)
         ) ?: return
 
-        val plugged = batteryInfo.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)
-
-        when (plugged) {
-            BatteryManager.BATTERY_PLUGGED_AC, BatteryManager.BATTERY_PLUGGED_USB, BatteryManager.BATTERY_PLUGGED_WIRELESS -> {
-                startLocationUpdates()
-            }
+        when (batteryInfo.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)) {
+            BatteryManager.BATTERY_PLUGGED_AC, BatteryManager.BATTERY_PLUGGED_USB, BatteryManager.BATTERY_PLUGGED_WIRELESS -> startLocationUpdates(true)
+            else -> startLocationUpdates(false)
         }
     }
 
@@ -159,8 +164,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun startLocationUpdates() {
-        val locationRequest = createLocationRequest() ?: return
+    private fun startLocationUpdates(acc: Boolean) {
+        val locationRequest = createLocationRequest(acc) ?: return
         if (ActivityCompat.checkSelfPermission(
                 this,
                 ACCESS_FINE_LOCATION
@@ -183,11 +188,19 @@ class MainActivity : AppCompatActivity() {
         fusedLocationClient.removeLocationUpdates(locationCallback)
     }
 
-    private fun createLocationRequest(): LocationRequest? {
-        return LocationRequest.create()?.apply {
-            interval = 10000
-            fastestInterval = 5000
-            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+    private fun createLocationRequest(acc: Boolean): LocationRequest? {
+        if (acc) {
+            return LocationRequest.create()?.apply {
+                interval = 10000
+                fastestInterval = 5000
+                priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+            }
+        } else {
+            return LocationRequest.create()?.apply {
+                interval = 60000
+                fastestInterval = 60000
+                priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
+            }
         }
     }
 }
