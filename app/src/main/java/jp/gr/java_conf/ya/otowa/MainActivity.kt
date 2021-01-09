@@ -40,6 +40,12 @@ class MainActivity : AppCompatActivity() {
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
         isDebugMode = sharedPreferences.getBoolean("pref_is_debug_mode", false)
 
+        with(sharedPreferences.edit()) {
+            putString("pref_current_latitude", "")
+            putString("pref_current_longitude", "")
+            commit()
+        }
+
         val batteryInfo: Intent = registerReceiver(
             null, IntentFilter(Intent.ACTION_BATTERY_CHANGED)
         ) ?: return
@@ -47,7 +53,6 @@ class MainActivity : AppCompatActivity() {
         val plugged = batteryInfo.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)
 
         when (plugged) {
-            // when (if (isDebugMode) BatteryManager.BATTERY_PLUGGED_AC else plugged) {
             BatteryManager.BATTERY_PLUGGED_AC, BatteryManager.BATTERY_PLUGGED_USB, BatteryManager.BATTERY_PLUGGED_WIRELESS -> {
 
                 fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
@@ -109,7 +114,6 @@ class MainActivity : AppCompatActivity() {
         val plugged = batteryInfo.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)
 
         when (plugged) {
-            // when (if (isDebugMode) BatteryManager.BATTERY_PLUGGED_AC else plugged) {
             BatteryManager.BATTERY_PLUGGED_AC, BatteryManager.BATTERY_PLUGGED_USB, BatteryManager.BATTERY_PLUGGED_WIRELESS -> {
                 startLocationUpdates()
             }

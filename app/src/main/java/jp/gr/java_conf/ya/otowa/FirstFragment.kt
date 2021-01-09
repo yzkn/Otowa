@@ -31,6 +31,7 @@ import twitter4j.TwitterException
 import twitter4j.TwitterFactory
 import twitter4j.conf.ConfigurationBuilder
 import java.lang.Double.parseDouble
+import java.lang.Exception
 
 
 /**
@@ -471,7 +472,7 @@ class FirstFragment : Fragment() {
                     withContext(Dispatchers.Main) {
                         Toast.makeText(
                             activity,
-                            "Tweeted.",
+                            "Tweeted: $tweettext",
                             Toast.LENGTH_LONG
                         ).show()
                     }
@@ -513,23 +514,32 @@ class FirstFragment : Fragment() {
 
     private fun reverseGeocode() {
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
-        val latString = sharedPreferences.getString("pref_current_latitude", "") ?: "-91.0"
-        val lonString = sharedPreferences.getString("pref_current_longitude", "") ?: "-181.0"
-        if (isDebugMode) {
-            Log.v(packageNameString, "latString: ${latString}")
-            Log.v(packageNameString, "lonString: ${lonString}")
-        }
-        val currentLatitude = parseDouble(latString)
-        val currentLongitude = parseDouble(lonString)
+        val latString = sharedPreferences.getString("pref_current_latitude", "")
+        val lonString = sharedPreferences.getString("pref_current_longitude", "")
 
-        // 測位に成功している場合
-        if (currentLatitude >= -90.0 && currentLongitude >= -180.0) {
-            // 逆ジオコーディング
-            val cityName = cityDbController.searchCity(currentLatitude, currentLongitude)
-            Log.v(packageNameString, "City: $cityName")
+        if(latString != "" && lonString != "") {
+            var currentLatitude = -91.0
+            var currentLongitude = -181.0
 
-            if(!cityName.isNullOrEmpty()) {
-                view?.findViewById<EditText>(R.id.tweet_main)?.setText(cityName)
+            try {
+                currentLatitude = parseDouble(latString)
+                currentLongitude = parseDouble(lonString)
+
+                // 測位に成功している場合
+                if (currentLatitude >= -90.0 && currentLongitude >= -180.0) {
+                    // 逆ジオコーディング
+                    val cityName = cityDbController.searchCity(currentLatitude, currentLongitude)
+                    Log.v(packageNameString, "City: $cityName")
+
+                    if(!cityName.isNullOrEmpty()) {
+                        view?.findViewById<EditText>(R.id.tweet_main)?.setText(cityName)
+                    }
+                }
+            } catch (e: Exception) {
+                if (isDebugMode) {
+                    Log.v(packageNameString, "latString: ${latString} ${e}")
+                    Log.v(packageNameString, "lonString: ${lonString} ${e}")
+                }
             }
         }
     }
