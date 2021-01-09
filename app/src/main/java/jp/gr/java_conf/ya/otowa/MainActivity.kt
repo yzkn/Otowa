@@ -24,6 +24,8 @@ class MainActivity : AppCompatActivity() {
     var isDebugMode = false
     var packageNameString = ""
 
+    var isLocationUpdatesStarted = false
+
     companion object {
         private const val PERMISSION_REQUEST_CODE = 1000
     }
@@ -79,7 +81,7 @@ class MainActivity : AppCompatActivity() {
 
                             // 測位に成功したらボタンのテキストを更新する
                             val buttonLocate = findViewById<Button>(R.id.button_locate)
-                            if(buttonLocate != null){
+                            if (buttonLocate != null) {
                                 buttonLocate.text = getString(R.string.locate)
                             }
                         }
@@ -120,7 +122,9 @@ class MainActivity : AppCompatActivity() {
         ) ?: return
 
         when (batteryInfo.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)) {
-            BatteryManager.BATTERY_PLUGGED_AC, BatteryManager.BATTERY_PLUGGED_USB, BatteryManager.BATTERY_PLUGGED_WIRELESS -> startLocationUpdates(true)
+            BatteryManager.BATTERY_PLUGGED_AC, BatteryManager.BATTERY_PLUGGED_USB, BatteryManager.BATTERY_PLUGGED_WIRELESS -> startLocationUpdates(
+                true
+            )
             else -> startLocationUpdates(false)
         }
     }
@@ -177,15 +181,25 @@ class MainActivity : AppCompatActivity() {
             requestPermission()
             return
         }
-        fusedLocationClient.requestLocationUpdates(
-            locationRequest,
-            locationCallback,
-            null
-        )
+        if (!isLocationUpdatesStarted) {
+            if (::fusedLocationClient.isInitialized) {
+                fusedLocationClient.requestLocationUpdates(
+                    locationRequest,
+                    locationCallback,
+                    null
+                )
+                isLocationUpdatesStarted = true
+            }
+        }
     }
 
     private fun stopLocationUpdates() {
-        fusedLocationClient.removeLocationUpdates(locationCallback)
+        if (isLocationUpdatesStarted) {
+            if (::fusedLocationClient.isInitialized) {
+                fusedLocationClient.removeLocationUpdates(locationCallback)
+                isLocationUpdatesStarted = false
+            }
+        }
     }
 
     private fun createLocationRequest(acc: Boolean): LocationRequest? {
