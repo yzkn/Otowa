@@ -9,16 +9,8 @@
         app:showAsAction="never" />
 
     <item
-        android:id="@+id/action_twitter_api"
-        android:orderInCategory="200"
-        android:title="@string/action_twitter_api"
-        app:showAsAction="never">
-        <menu>
-            <item
-                android:id="@+id/action_twitter_profile_image"
-                android:orderInCategory="100"
-                android:title="@string/action_twitter_profile_image"
-                app:showAsAction="never" />
-        </menu>
-    </item>
+        android:id="@+id/action_twitter_profile_image"
+        android:orderInCategory="100"
+        android:title="@string/action_twitter_profile_image"
+        app:showAsAction="never" />
 </menu>

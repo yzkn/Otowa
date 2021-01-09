@@ -63,8 +63,14 @@ class FirstFragment : Fragment() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (isDebugMode) {
+            Log.v(packageNameString, "onOptionsItemSelected() item: $item")
+        }
         when (item.itemId) {
             R.id.action_twitter_profile_image -> {
+                if (isDebugMode) {
+                    Log.v(packageNameString, "action_twitter_profile_image")
+                }
                 reloadProfileImage()
                 return false
             }
@@ -244,7 +250,7 @@ class FirstFragment : Fragment() {
             Log.v(packageNameString, "changeScreenBrightness() plugged: $plugged")
         }
 
-        when (plugged) { // if (isDebugMode) BATTERY_PLUGGED_AC else plugged
+        when (plugged) {
             BATTERY_PLUGGED_AC, BATTERY_PLUGGED_USB, BATTERY_PLUGGED_WIRELESS -> {
                 val lp: WindowManager.LayoutParams? = activity?.getWindow()?.getAttributes()
                 if (lp != null) {
@@ -400,9 +406,9 @@ class FirstFragment : Fragment() {
     private suspend fun showUserInfo() {
         val usr = withContext(Dispatchers.IO) { oauthTwitter.verifyCredentials() }
         if (isDebugMode) {
-            Log.v("twitter", usr.name)
-            Log.v("twitter", usr.screenName)
-            Log.v("twitter", usr.profileImageURLHttps)
+            Log.v(packageNameString, "usr.name: ${usr.name}")
+            Log.v(packageNameString, "usr.screenName: ${usr.screenName}")
+            Log.v(packageNameString, "usr.profileImageURLHttps: ${usr.profileImageURLHttps}")
         }
 
         // 画面再読み込み
@@ -439,8 +445,14 @@ class FirstFragment : Fragment() {
     }
 
     private fun reloadProfileImage() {
+        if (isDebugMode) {
+            Log.v(packageNameString, "reloadProfileImage()")
+        }
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
             val usr = withContext(Dispatchers.IO) { getTw().verifyCredentials() }
+            if (isDebugMode) {
+                Log.v(packageNameString, "reloadProfileImage() usr: ${usr.toString()}")
+            }
 
             val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
             with(sharedPreferences.edit()) {
@@ -450,6 +462,9 @@ class FirstFragment : Fragment() {
                 )
 
                 commit()
+            }
+            if (isDebugMode) {
+                Log.v(packageNameString, "reloadProfileImage() uri: ${usr.profileImageURLHttps}")
             }
 
             withContext(Dispatchers.Main) {
@@ -537,8 +552,8 @@ class FirstFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 if (isDebugMode) {
-                    Log.v(packageNameString, "latString: ${latString} ${e}")
-                    Log.v(packageNameString, "lonString: ${lonString} ${e}")
+                    Log.v(packageNameString, "latString: $latString $e")
+                    Log.v(packageNameString, "lonString: $lonString $e")
                 }
             }
         }
