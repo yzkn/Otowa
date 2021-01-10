@@ -38,6 +38,7 @@
             android:orientation="horizontal">
 
             <Button
+                android:enabled="false"
                 android:id="@+id/button_clear"
                 android:layout_width="96dp"
                 android:layout_height="96dp"
@@ -83,7 +84,9 @@
             android:orientation="horizontal">
 
             <Button
+                android:enabled="false"
                 android:id="@+id/button_locate"
+                android:textSize="8sp"
                 android:layout_width="96dp"
                 android:layout_height="96dp"
                 android:text="@string/locate_unknown" />
@@ -100,6 +103,7 @@
                 android:lines="3" />
 
             <Button
+                android:enabled="false"
                 android:id="@+id/button_tweet"
                 android:layout_width="96dp"
                 android:layout_height="96dp"

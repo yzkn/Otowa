@@ -19,13 +19,21 @@
     <string name="clear">Clear</string>
     <string name="icon">icon</string>
     <string name="locate">Locate</string>
-    <string name="locate_unknown">(Locate)</string>
+    <string name="locate_unknown">UnLocated</string>
     <string name="prefix">Prefix</string>
     <string name="tweet">Tweet</string>
     <string name="suffix">Suffix</string>
 
     <string name="delete_tweet">Delete</string>
     <string name="tweet_delete_dialog">Delete my tweet</string>
+
+    <string name="deleted">Deleted.</string>
+    <string name="reloaded">Reloaded.</string>
+    <string name="tweeted">Tweeted: </string>
+
+    <!-- MainActivity -->
+    <string name="location_request_highacc">Locating started. (High accuracy)</string>
+    <string name="location_request_lowacc">Locating started. (Low accuracy)</string>
 
     <!-- Preference -->
     <string name="title_activity_settings">SettingsActivity</string>
