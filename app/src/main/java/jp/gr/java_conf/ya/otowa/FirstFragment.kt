@@ -2,9 +2,11 @@ package jp.gr.java_conf.ya.otowa
 
 import android.app.AlertDialog
 import android.app.Dialog
+import android.content.Context.AUDIO_SERVICE
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.media.AudioManager
 import android.net.Uri
 import android.os.BatteryManager
 import android.os.BatteryManager.*
@@ -45,6 +47,8 @@ class FirstFragment : Fragment() {
     var isDebugMode = false
     var packageNameString = ""
 
+    lateinit var audioManager: AudioManager
+
     lateinit var oauthTwitter: Twitter
     lateinit var apiTwitter: Twitter
     lateinit var createdView: View
@@ -54,6 +58,8 @@ class FirstFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
+
+        audioManager = context?.getSystemService(AUDIO_SERVICE) as AudioManager
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -128,6 +134,10 @@ class FirstFragment : Fragment() {
                 val buttonLocate = createdView.findViewById<Button>(R.id.button_locate)
                 val buttonTweet = createdView.findViewById<Button>(R.id.button_tweet)
 
+                val buttonVolumeDec = createdView.findViewById<Button>(R.id.button_volume_dec)
+                val buttonVolumeInc = createdView.findViewById<Button>(R.id.button_volume_inc)
+                val buttonVolumeMax = createdView.findViewById<Button>(R.id.button_volume_max)
+
                 // EditText群に対して設定
                 val editTextList = arrayOf(
                     createdView.findViewById<EditText>(R.id.tweet_prefix),
@@ -194,6 +204,17 @@ class FirstFragment : Fragment() {
                     editTextList[1].text.clear()
                 }
 
+                buttonVolumeDec.setOnClickListener {
+                    volumeDecrease()
+                }
+                buttonVolumeInc.setOnClickListener {
+                    volumeIncrease()
+                }
+                buttonVolumeMax.setOnClickListener {
+                    volumeMax()
+                }
+
+                checkVolume()
                 changeScreenBrightness()
 
                 iconImage.setOnLongClickListener {
@@ -246,6 +267,71 @@ class FirstFragment : Fragment() {
                 linearLayoutFirst.visibility = View.VISIBLE;
                 linearLayoutTweet.visibility = View.GONE;
             }
+        }
+    }
+
+    private fun checkVolume() {
+        if (::audioManager.isInitialized) {
+            val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+            val minVolume = audioManager.getStreamMinVolume(AudioManager.STREAM_MUSIC)
+            val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+            if (isDebugMode) {
+                Log.v(
+                    packageNameString,
+                    "checkVolume() currentVolume: $currentVolume minVolume: $minVolume maxVolume: $maxVolume"
+                )
+            }
+
+            val buttonVolumeDec = createdView.findViewById<Button>(R.id.button_volume_dec)
+            val buttonVolumeInc = createdView.findViewById<Button>(R.id.button_volume_inc)
+            val buttonVolumeMax = createdView.findViewById<Button>(R.id.button_volume_max)
+            when (currentVolume) {
+                minVolume -> {
+                    buttonVolumeDec.isEnabled = false
+                    buttonVolumeInc.isEnabled = true
+                    buttonVolumeMax.isEnabled = true
+                }
+                maxVolume -> {
+                    buttonVolumeDec.isEnabled = true
+                    buttonVolumeInc.isEnabled = false
+                    buttonVolumeMax.isEnabled = false
+                }
+                else -> {
+                    buttonVolumeDec.isEnabled = true
+                    buttonVolumeInc.isEnabled = true
+                    buttonVolumeMax.isEnabled = true
+                }
+            }
+        }
+    }
+
+    private fun volumeDecrease() {
+        if (::audioManager.isInitialized) {
+            val minVolume = audioManager.getStreamMinVolume(AudioManager.STREAM_MUSIC)
+            val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+            if (currentVolume - 1 >= minVolume) {
+                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, currentVolume - 1, 0)
+                checkVolume()
+            }
+        }
+    }
+
+    private fun volumeIncrease() {
+        if (::audioManager.isInitialized) {
+            val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+            val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+            if (currentVolume + 1 <= maxVolume) {
+                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, currentVolume + 1, 0)
+                checkVolume()
+            }
+        }
+    }
+
+    private fun volumeMax() {
+        if (::audioManager.isInitialized) {
+            val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, maxVolume, 0)
+            checkVolume()
         }
     }
 

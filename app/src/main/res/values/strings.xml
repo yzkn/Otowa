@@ -24,6 +24,11 @@
     <string name="tweet">Tweet</string>
     <string name="suffix">Suffix</string>
 
+
+    <string name="button_volume_dec">Vol--</string>
+    <string name="button_volume_inc">Vol++</string>
+    <string name="button_volume_max">max</string>
+
     <string name="delete_tweet">Delete</string>
     <string name="tweet_delete_dialog">Delete my tweet</string>
 
