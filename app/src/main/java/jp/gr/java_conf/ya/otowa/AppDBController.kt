@@ -26,13 +26,13 @@ open class AppDBController(context: Context) {
                 sqLiteDatabase?.rawQuery(selectQql, arrayOf(lat.toString(), lng.toString()))
                     ?: return null
 
-            if (cursor?.moveToNext() == true) {
+            if (cursor.moveToNext()) {
                 cityName = cursor.getString(cursor.getColumnIndex("市区町村名")) ?: ""
             }
         }catch (e: Exception){
         } finally {
             if (::cursor.isInitialized) {
-                cursor?.close()
+                cursor.close()
             }
         }
         return cityName

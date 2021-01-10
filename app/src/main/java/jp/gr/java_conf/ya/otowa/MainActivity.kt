@@ -4,20 +4,19 @@ import android.Manifest.permission.*
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.net.*
 import android.os.BatteryManager
 import android.os.Bundle
 import android.util.Log
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.google.android.material.snackbar.Snackbar
-import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
-import android.view.WindowManager
 import android.widget.Button
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.preference.PreferenceManager
 import com.google.android.gms.location.*
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -34,6 +33,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
 
+    private lateinit var connectivityManager: ConnectivityManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -49,6 +50,9 @@ class MainActivity : AppCompatActivity() {
             putString("pref_current_longitude", "")
             commit()
         }
+
+        // 接続状況
+        connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
 
         // 測位
         var updatedCount = 0
@@ -113,18 +117,22 @@ class MainActivity : AppCompatActivity() {
         ) ?: return
 
         stopLocationUpdates()
-
         when (batteryInfo.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)) {
             BatteryManager.BATTERY_PLUGGED_AC, BatteryManager.BATTERY_PLUGGED_USB, BatteryManager.BATTERY_PLUGGED_WIRELESS -> startLocationUpdates(
                 true
             )
             else -> startLocationUpdates(false)
         }
+
+        startNetworkCallback()
     }
 
     override fun onPause() {
         super.onPause()
+
         stopLocationUpdates()
+
+        stopNetworkCallback()
     }
 
     private fun requestPermission() {
@@ -219,5 +227,94 @@ class MainActivity : AppCompatActivity() {
                 priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
             }
         }
+    }
+
+    // 接続状況
+    private fun startNetworkCallback() {
+        val request = NetworkRequest.Builder()
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+            .build()
+        connectivityManager.registerNetworkCallback(request, networkCallback)
+    }
+
+    private fun stopNetworkCallback() {
+        connectivityManager.unregisterNetworkCallback(networkCallback)
+    }
+
+    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) {
+            if (isDebugMode) {
+                Log.v(packageNameString, "onAvailable() $network")
+            }
+            checkConnection()
+        }
+
+        override fun onLost(network: Network) {
+            if (isDebugMode) {
+                Log.v(packageNameString, "onAvailable() $network")
+            }
+            checkConnection()
+        }
+
+        override fun onCapabilitiesChanged(network : Network, networkCapabilities : NetworkCapabilities) {
+            if (isDebugMode) {
+                Log.v(packageNameString, "onCapabilitiesChanged() $networkCapabilities")
+            }
+        }
+
+        override fun onLinkPropertiesChanged(network : Network, linkProperties : LinkProperties) {
+            if (isDebugMode) {
+                Log.v(packageNameString, "onLinkPropertiesChanged() $linkProperties")
+            }
+        }
+
+    }
+
+    private fun checkConnection() {
+        if (isDebugMode) {
+            Log.v(packageNameString, "checkConnection()")
+        }
+
+        val activeNetworks = connectivityManager.allNetworks.mapNotNull {
+            connectivityManager.getNetworkCapabilities(it)
+        }.filter {
+            it.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+                    it.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+        }
+
+        val isConnected = activeNetworks.isNotEmpty()
+        // activeNetworks.any { it.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) }
+
+
+        if (isDebugMode) {
+            connectivityManager.allNetworks.forEach { network ->
+                Log.v(
+                    packageNameString,
+                    "checkConnection() network: $network"
+                )
+                if (connectivityManager.getNetworkCapabilities(network)
+                        ?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
+                ) {
+                    Log.v(
+                        packageNameString,
+                        "checkConnection() network: $network WIFI"
+                    )
+                } else if (connectivityManager.getNetworkCapabilities(network)
+                        ?.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) == true
+                ) {
+                    Log.v(
+                        packageNameString,
+                        "checkConnection() network: $network CELLULAR"
+                    )
+                }
+            }
+        }
+
+        Toast.makeText(
+            this,
+            if (isConnected) getString(R.string.network_state_connected) else getString(R.string.network_state_nonetwork),
+            Toast.LENGTH_LONG
+        ).show()
     }
 }

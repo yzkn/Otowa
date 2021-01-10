@@ -423,7 +423,7 @@ class FirstFragment : Fragment() {
                     }
                 } catch (e: IllegalStateException) {
                     if (isDebugMode) {
-                        Log.e("getRequestToken() ERROR: ", e.toString())
+                        Log.e(packageNameString, "getRequestToken() ERROR: $e")
                     }
                 }
             }
@@ -647,16 +647,13 @@ class FirstFragment : Fragment() {
 
     private fun reverseGeocode() {
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
-        val latString = sharedPreferences.getString("pref_current_latitude", "")
-        val lonString = sharedPreferences.getString("pref_current_longitude", "")
+        val latString = sharedPreferences.getString("pref_current_latitude", "") ?: ""
+        val lonString = sharedPreferences.getString("pref_current_longitude", "") ?: ""
 
         if (latString != "" && lonString != "") {
-            var currentLatitude = -91.0
-            var currentLongitude = -181.0
-
             try {
-                currentLatitude = parseDouble(latString)
-                currentLongitude = parseDouble(lonString)
+                var currentLatitude = parseDouble(latString)
+                var currentLongitude = parseDouble(lonString)
 
                 // 測位に成功している場合
                 if (currentLatitude >= -90.0 && currentLongitude >= -180.0) {

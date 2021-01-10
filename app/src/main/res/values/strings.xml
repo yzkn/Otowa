@@ -37,8 +37,11 @@
     <string name="tweeted">Tweeted: </string>
 
     <!-- MainActivity -->
-    <string name="location_request_highacc">Locating started. (High accuracy)</string>
-    <string name="location_request_lowacc">Locating started. (Low accuracy)</string>
+    <string name="location_request_highacc">[Locating] started. (High accuracy)</string>
+    <string name="location_request_lowacc">[Locating] started. (Low accuracy)</string>
+
+    <string name="network_state_connected">[Network] Connected.</string>
+    <string name="network_state_nonetwork">[Network] No networks found.</string>
 
     <!-- Preference -->
     <string name="title_activity_settings">SettingsActivity</string>
