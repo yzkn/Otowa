@@ -694,12 +694,16 @@ class FirstFragment : Fragment() {
                                 val tweettext = buf.toString()
                                 updateTweet(tweettext)
                             } else {
-                                val tweetMainText =
-                                    view?.findViewById<EditText>(R.id.tweet_main)?.text.toString()
-                                view?.findViewById<EditText>(R.id.tweet_main)?.setText(
-                                    (if (tweetMainText.isNotEmpty()) "$tweetMainText " else "") + cityName
-                                )
-                                view?.findViewById<EditText>(R.id.tweet_main)?.requestFocus()
+                                val et = view?.findViewById<EditText>(R.id.tweet_main)
+                                if (et != null) {
+                                    val tweetMainText =
+                                        et.text.toString()
+                                    et.setText(
+                                        (if (tweetMainText.isNotEmpty()) "$tweetMainText " else "") + cityName
+                                    )
+                                    et.requestFocus()
+                                    et.setSelection(et.getText().length)
+                                }
                             }
                         }
                     }
