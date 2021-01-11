@@ -11,6 +11,7 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Button
+import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -29,6 +30,8 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val PERMISSION_REQUEST_CODE = 1000
     }
+
+    lateinit var cityDbController: AppDBController
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
@@ -83,11 +86,32 @@ class MainActivity : AppCompatActivity() {
                     if (buttonLocate != null) {
                         buttonLocate.isEnabled = true
                         buttonLocate.textSize = 14F
-                        buttonLocate.text = getString(R.string.locate)
+
+
+                        // 逆ジオコーディング
+                        if (::cityDbController.isInitialized) {
+                            val cityName =
+                                cityDbController.searchCity(location.latitude, location.longitude)
+                            Log.v(packageNameString, "reverseGeocode() City: $cityName")
+
+                            if (!cityName.isNullOrEmpty()) {
+                                buttonLocate.text = getString(R.string.locate) + " " + cityName
+                            } else {
+                                buttonLocate.text = getString(R.string.locate)
+                            }
+                        } else {
+                            buttonLocate.text = getString(R.string.locate)
+                        }
                     }
                 }
             }
         }
+
+        initDb()
+    }
+
+    private fun initDb() {
+        cityDbController = AppDBController(this)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -257,13 +281,16 @@ class MainActivity : AppCompatActivity() {
             checkConnection()
         }
 
-        override fun onCapabilitiesChanged(network : Network, networkCapabilities : NetworkCapabilities) {
+        override fun onCapabilitiesChanged(
+            network: Network,
+            networkCapabilities: NetworkCapabilities
+        ) {
             if (isDebugMode) {
                 Log.v(packageNameString, "onCapabilitiesChanged() $networkCapabilities")
             }
         }
 
-        override fun onLinkPropertiesChanged(network : Network, linkProperties : LinkProperties) {
+        override fun onLinkPropertiesChanged(network: Network, linkProperties: LinkProperties) {
             if (isDebugMode) {
                 Log.v(packageNameString, "onLinkPropertiesChanged() $linkProperties")
             }

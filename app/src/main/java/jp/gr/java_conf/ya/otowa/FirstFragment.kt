@@ -1,5 +1,6 @@
 package jp.gr.java_conf.ya.otowa
 
+import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.app.Dialog
 import android.content.Context.AUDIO_SERVICE
@@ -185,6 +186,10 @@ class FirstFragment : Fragment() {
                 }
                 buttonLocate.setOnClickListener {
                     reverseGeocode()
+                }
+                buttonLocate.setOnLongClickListener {
+                    reverseGeocode(true)
+                    true
                 }
                 iconImage.setOnClickListener {
                     createdView.findViewById<ImageButton>(R.id.icon_image).isEnabled = false
@@ -660,7 +665,8 @@ class FirstFragment : Fragment() {
         }
     }
 
-    private fun reverseGeocode() {
+    @SuppressLint("SetTextI18n")
+    private fun reverseGeocode(direct: Boolean = false) {
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
         val latString = sharedPreferences.getString("pref_current_latitude", "") ?: ""
         val lonString = sharedPreferences.getString("pref_current_longitude", "") ?: ""
@@ -679,9 +685,22 @@ class FirstFragment : Fragment() {
                         Log.v(packageNameString, "reverseGeocode() City: $cityName")
 
                         if (!cityName.isNullOrEmpty()) {
-                            view?.findViewById<EditText>(R.id.tweet_main)?.setText(
-                                view?.findViewById<EditText>(R.id.tweet_main)?.text.toString() + cityName
-                            )
+                            if (direct) {
+                                val buf = StringBuilder().also {
+                                    it.append(createdView.findViewById<EditText>(R.id.tweet_prefix).text)
+                                    it.append(cityName)
+                                    it.append(createdView.findViewById<EditText>(R.id.tweet_suffix).text)
+                                }
+                                val tweettext = buf.toString()
+                                updateTweet(tweettext)
+                            } else {
+                                val tweetMainText =
+                                    view?.findViewById<EditText>(R.id.tweet_main)?.text.toString()
+                                view?.findViewById<EditText>(R.id.tweet_main)?.setText(
+                                    (if (tweetMainText.isNotEmpty()) "$tweetMainText " else "") + cityName
+                                )
+                                view?.findViewById<EditText>(R.id.tweet_main)?.requestFocus()
+                            }
                         }
                     }
                 }

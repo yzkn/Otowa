@@ -40,13 +40,13 @@
             <Button
                 android:id="@+id/button_clear"
                 android:layout_width="96dp"
-                android:layout_height="96dp"
+                android:layout_height="match_parent"
                 android:enabled="false"
                 android:text="@string/clear" />
 
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:orientation="vertical">
 
@@ -54,7 +54,6 @@
                     android:id="@+id/tweet_prefix"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:layout_weight="1"
                     android:gravity="start|top"
                     android:hint="@string/prefix"
                     android:importantForAutofill="no"
@@ -65,7 +64,6 @@
                     android:id="@+id/tweet_suffix"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:layout_weight="1"
                     android:gravity="start|top"
                     android:hint="@string/suffix"
                     android:importantForAutofill="no"
@@ -76,27 +74,17 @@
 
             <ImageButton
                 android:id="@+id/icon_image"
-                android:background="#ffffffff"
                 android:layout_width="96dp"
-                android:layout_height="96dp"
+                android:layout_height="match_parent"
                 android:layout_marginStart="10dp"
                 android:layout_marginTop="10dp"
                 android:layout_marginEnd="10dp"
                 android:layout_marginBottom="10dp"
+                android:background="#ffffffff"
                 android:contentDescription="@string/icon"
                 android:scaleType="fitCenter" />
 
         </LinearLayout>
-
-        <EditText
-            android:id="@+id/tweet_main"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="start|top"
-            android:hint="@string/tweet"
-            android:importantForAutofill="no"
-            android:inputType="textMultiLine"
-            android:lines="6" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -106,30 +94,47 @@
             <Button
                 android:id="@+id/button_locate"
                 android:layout_width="96dp"
-                android:layout_height="96dp"
+                android:layout_height="match_parent"
                 android:enabled="false"
                 android:text="@string/locate_unknown"
-                android:textSize="8sp" />
+                android:textSize="8sp"
+                tools:ignore="SmallSp" />
+
+            <EditText
+                android:id="@+id/tweet_main"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="start|top"
+                android:hint="@string/tweet"
+                android:importantForAutofill="no"
+                android:inputType="textMultiLine"
+                android:lines="5" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="96dp"
+            android:orientation="horizontal">
 
             <Button
                 android:id="@+id/button_volume_dec"
                 android:layout_width="96dp"
-                android:layout_height="96dp"
+                android:layout_height="match_parent"
                 android:text="@string/button_volume_dec"
                 app:backgroundTint="#ff0099cc" />
-
 
             <Button
                 android:id="@+id/button_volume_inc"
                 android:layout_width="96dp"
-                android:layout_height="96dp"
+                android:layout_height="match_parent"
                 android:text="@string/button_volume_inc"
                 app:backgroundTint="#ff0099cc" />
 
             <Button
                 android:id="@+id/button_volume_max"
                 android:layout_width="96dp"
-                android:layout_height="96dp"
+                android:layout_height="match_parent"
                 android:text="@string/button_volume_max"
                 app:backgroundTint="#ff0099cc" />
         </LinearLayout>
