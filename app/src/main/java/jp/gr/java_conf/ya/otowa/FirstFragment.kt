@@ -129,10 +129,9 @@ class FirstFragment : Fragment() {
                 linearLayoutFirst.visibility = View.GONE;
                 linearLayoutTweet.visibility = View.VISIBLE;
 
-                val iconImage = createdView.findViewById<ImageView>(R.id.icon_image)
+                val iconImage = createdView.findViewById<ImageButton>(R.id.icon_image)
                 val buttonClear = createdView.findViewById<Button>(R.id.button_clear)
                 val buttonLocate = createdView.findViewById<Button>(R.id.button_locate)
-                val buttonTweet = createdView.findViewById<Button>(R.id.button_tweet)
 
                 val buttonVolumeDec = createdView.findViewById<Button>(R.id.button_volume_dec)
                 val buttonVolumeInc = createdView.findViewById<Button>(R.id.button_volume_inc)
@@ -169,9 +168,7 @@ class FirstFragment : Fragment() {
                                 }
                             }
                             val textLen = buf.toString().length
-                            buttonTweet.text = textLen.toString()
                             buttonClear.isEnabled = textLen > 0
-                            buttonTweet.isEnabled = textLen > 0
                         }
                     })
                 }
@@ -189,8 +186,8 @@ class FirstFragment : Fragment() {
                 buttonLocate.setOnClickListener {
                     reverseGeocode()
                 }
-                buttonTweet.setOnClickListener {
-                    createdView.findViewById<Button>(R.id.button_tweet).isEnabled = false
+                iconImage.setOnClickListener {
+                    createdView.findViewById<ImageButton>(R.id.icon_image).isEnabled = false
 
                     val buf = StringBuilder().also {
                         for (editTextItem2 in editTextList) {
@@ -200,15 +197,23 @@ class FirstFragment : Fragment() {
                     val tweettext = buf.toString()
                     updateTweet(tweettext)
 
-                    createdView.findViewById<Button>(R.id.button_tweet).isEnabled = true
+                    createdView.findViewById<ImageButton>(R.id.icon_image).isEnabled = true
                     editTextList[1].text.clear()
                 }
 
                 buttonVolumeDec.setOnClickListener {
                     volumeDecrease()
                 }
+                buttonVolumeDec.setOnLongClickListener {
+                    volumeDecrease(5)
+                    true
+                }
                 buttonVolumeInc.setOnClickListener {
                     volumeIncrease()
+                }
+                buttonVolumeInc.setOnLongClickListener {
+                    volumeIncrease(5)
+                    true
                 }
                 buttonVolumeMax.setOnClickListener {
                     volumeMax()
@@ -305,23 +310,31 @@ class FirstFragment : Fragment() {
         }
     }
 
-    private fun volumeDecrease() {
+    private fun volumeDecrease(diff: Int = 1) {
+        if (isDebugMode) {
+            Log.v(packageNameString, "volumeDecrease() diff: $diff")
+        }
+
         if (::audioManager.isInitialized) {
             val minVolume = audioManager.getStreamMinVolume(AudioManager.STREAM_MUSIC)
             val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-            if (currentVolume - 1 >= minVolume) {
-                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, currentVolume - 1, 0)
+            if (currentVolume - diff >= minVolume) {
+                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, currentVolume - diff, 0)
                 checkVolume()
             }
         }
     }
 
-    private fun volumeIncrease() {
+    private fun volumeIncrease(diff: Int = 1) {
+        if (isDebugMode) {
+            Log.v(packageNameString, "volumeIncrease() diff: $diff")
+        }
+
         if (::audioManager.isInitialized) {
             val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
             val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-            if (currentVolume + 1 <= maxVolume) {
-                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, currentVolume + 1, 0)
+            if (currentVolume + diff <= maxVolume) {
+                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, currentVolume + diff, 0)
                 checkVolume()
             }
         }
@@ -580,7 +593,7 @@ class FirstFragment : Fragment() {
 
             withContext(Dispatchers.Main) {
                 if (usr.profileImageURLHttps != "" && usr.profileImageURLHttps.startsWith("http")) {
-                    val iconImage = activity?.findViewById<ImageView>(R.id.icon_image)
+                    val iconImage = activity?.findViewById<ImageButton>(R.id.icon_image)
                     Picasso.get()
                         .load(usr.profileImageURLHttps)
                         .into(iconImage);

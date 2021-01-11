@@ -44,19 +44,39 @@
                 android:enabled="false"
                 android:text="@string/clear" />
 
-            <EditText
-                android:id="@+id/tweet_prefix"
-                android:layout_width="0dp"
-                android:layout_height="96dp"
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:gravity="start|top"
-                android:hint="@string/prefix"
-                android:importantForAutofill="no"
-                android:inputType="textMultiLine"
-                android:lines="3" />
+                android:orientation="vertical">
 
-            <ImageView
+                <EditText
+                    android:id="@+id/tweet_prefix"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:gravity="start|top"
+                    android:hint="@string/prefix"
+                    android:importantForAutofill="no"
+                    android:inputType="textMultiLine"
+                    android:lines="1" />
+
+                <EditText
+                    android:id="@+id/tweet_suffix"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:gravity="start|top"
+                    android:hint="@string/suffix"
+                    android:importantForAutofill="no"
+                    android:inputType="textMultiLine"
+                    android:lines="1" />
+
+            </LinearLayout>
+
+            <ImageButton
                 android:id="@+id/icon_image"
+                android:background="#ffffffff"
                 android:layout_width="96dp"
                 android:layout_height="96dp"
                 android:layout_marginStart="10dp"
@@ -91,51 +111,27 @@
                 android:text="@string/locate_unknown"
                 android:textSize="8sp" />
 
-            <EditText
-                android:id="@+id/tweet_suffix"
-                android:layout_width="0dp"
-                android:layout_height="96dp"
-                android:layout_weight="1"
-                android:gravity="start|top"
-                android:hint="@string/suffix"
-                android:importantForAutofill="no"
-                android:inputType="textMultiLine"
-                android:lines="3" />
-
-            <Button
-                android:id="@+id/button_tweet"
-                android:layout_width="96dp"
-                android:layout_height="96dp"
-                android:enabled="false"
-                android:text="@string/tweet" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
             <Button
                 android:id="@+id/button_volume_dec"
-                app:backgroundTint="#ff0099cc"
                 android:layout_width="96dp"
                 android:layout_height="96dp"
-                android:text="@string/button_volume_dec" />
+                android:text="@string/button_volume_dec"
+                app:backgroundTint="#ff0099cc" />
 
 
             <Button
                 android:id="@+id/button_volume_inc"
-                app:backgroundTint="#ff0099cc"
                 android:layout_width="96dp"
                 android:layout_height="96dp"
-                android:text="@string/button_volume_inc" />
+                android:text="@string/button_volume_inc"
+                app:backgroundTint="#ff0099cc" />
 
             <Button
                 android:id="@+id/button_volume_max"
-                app:backgroundTint="#ff0099cc"
                 android:layout_width="96dp"
                 android:layout_height="96dp"
-                android:text="@string/button_volume_max" />
+                android:text="@string/button_volume_max"
+                app:backgroundTint="#ff0099cc" />
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>
