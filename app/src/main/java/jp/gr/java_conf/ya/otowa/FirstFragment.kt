@@ -597,25 +597,27 @@ class FirstFragment : Fragment() {
 
     private fun updateTweet(tweettext: String) {
         if (tweettext != "") {
-            try {
-                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-                    async(Dispatchers.IO) {
+            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+                async(Dispatchers.IO) {
+                    try {
                         getTw().updateStatus(tweettext)
-                    }.await()
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(
-                            activity,
-                            getString(R.string.tweeted) + tweettext,
-                            Toast.LENGTH_LONG
-                        ).show()
+                    } catch (e: TwitterException) {
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(
+                                activity,
+                                e.toString(),
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
                     }
+                }.await()
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        activity,
+                        getString(R.string.tweeted) + tweettext,
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
-            } catch (e: TwitterException) {
-                Toast.makeText(
-                    activity,
-                    e.toString(),
-                    Toast.LENGTH_LONG
-                ).show()
             }
         }
     }
