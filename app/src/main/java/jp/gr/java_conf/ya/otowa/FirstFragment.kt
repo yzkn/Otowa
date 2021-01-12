@@ -34,6 +34,8 @@ import twitter4j.TwitterFactory
 import twitter4j.conf.ConfigurationBuilder
 import java.lang.Double.parseDouble
 import java.lang.Exception
+import java.lang.Integer.max
+import java.lang.Integer.min
 
 
 /**
@@ -323,10 +325,12 @@ class FirstFragment : Fragment() {
         if (::audioManager.isInitialized) {
             val minVolume = audioManager.getStreamMinVolume(AudioManager.STREAM_MUSIC)
             val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-            if (currentVolume - diff >= minVolume) {
-                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, currentVolume - diff, 0)
-                checkVolume()
-            }
+            audioManager.setStreamVolume(
+                AudioManager.STREAM_MUSIC,
+                max(currentVolume - diff, minVolume),
+                0
+            )
+            checkVolume()
         }
     }
 
@@ -338,10 +342,12 @@ class FirstFragment : Fragment() {
         if (::audioManager.isInitialized) {
             val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
             val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-            if (currentVolume + diff <= maxVolume) {
-                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, currentVolume + diff, 0)
-                checkVolume()
-            }
+            audioManager.setStreamVolume(
+                AudioManager.STREAM_MUSIC,
+                min(currentVolume + diff, maxVolume),
+                0
+            )
+            checkVolume()
         }
     }
 

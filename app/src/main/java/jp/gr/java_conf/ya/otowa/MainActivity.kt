@@ -11,12 +11,13 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Button
-import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.preference.PreferenceManager
 import com.google.android.gms.location.*
+import com.luckycatlabs.sunrisesunset.SunriseSunsetCalculator
+import java.util.*
 
 
 class MainActivity : AppCompatActivity() {
@@ -26,6 +27,8 @@ class MainActivity : AppCompatActivity() {
     var packageNameString = ""
 
     var isLocationUpdatesStarted = false
+
+    var updatedCount = 0
 
     companion object {
         private const val PERMISSION_REQUEST_CODE = 1000
@@ -58,56 +61,96 @@ class MainActivity : AppCompatActivity() {
         connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
 
         // 測位
-        var updatedCount = 0
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult?) {
                 locationResult ?: return
-                for (location in locationResult.locations) {
-                    updatedCount++
-                    if (isDebugMode) {
-                        Log.v(
-                            packageNameString,
-                            "onCreate() GPS ${updatedCount.toString()} ${location.latitude} , ${location.longitude}"
-                        )
-                    }
-
-                    with(
-                        PreferenceManager.getDefaultSharedPreferences(application).edit()
-                    ) {
-                        putString("pref_current_latitude", location.latitude.toString())
-                        putString("pref_current_longitude", location.longitude.toString())
-
-                        commit()
-                    }
-
-                    // 測位に成功したらボタンのテキストを更新する
-                    val buttonLocate = findViewById<Button>(R.id.button_locate)
-                    if (buttonLocate != null) {
-                        buttonLocate.isEnabled = true
-                        buttonLocate.textSize = 14F
-
-
-                        // 逆ジオコーディング
-                        if (::cityDbController.isInitialized) {
-                            val cityName =
-                                cityDbController.searchCity(location.latitude, location.longitude)
-                            Log.v(packageNameString, "reverseGeocode() City: $cityName")
-
-                            if (!cityName.isNullOrEmpty()) {
-                                buttonLocate.text = getString(R.string.locate) + " " + cityName
-                            } else {
-                                buttonLocate.text = getString(R.string.locate)
-                            }
-                        } else {
-                            buttonLocate.text = getString(R.string.locate)
-                        }
-                    }
-                }
+                locate(locationResult)
             }
         }
 
         initDb()
+    }
+
+    private fun locate(locationResult: LocationResult) {
+        for (location in locationResult.locations) {
+            updatedCount++
+            if (isDebugMode) {
+                Log.v(
+                    packageNameString,
+                    "onCreate() GPS $updatedCount ${location.latitude} , ${location.longitude}"
+                )
+            }
+
+            with(
+                PreferenceManager.getDefaultSharedPreferences(application).edit()
+            ) {
+                putString("pref_current_latitude", location.latitude.toString())
+                putString("pref_current_longitude", location.longitude.toString())
+
+                commit()
+            }
+
+            // 測位ごとに毎回行う
+            updateLocateButton(location)
+            updateSpeedMeter(location.speed)
+
+            // たまに行う
+            if (0 == (updatedCount % 10)) {
+                updateSunriseSunsetLabel(location)
+            }
+        }
+    }
+
+    private fun updateLocateButton(location: android.location.Location) {
+        // 測位に成功したらボタンのテキストを更新する
+        val buttonLocate = findViewById<Button>(R.id.button_locate)
+        if (buttonLocate != null) {
+            buttonLocate.isEnabled = true
+            buttonLocate.textSize = 14F
+
+
+            // 逆ジオコーディング
+            if (::cityDbController.isInitialized) {
+                val cityName =
+                    cityDbController.searchCity(location.latitude, location.longitude)
+                Log.v(packageNameString, "reverseGeocode() City: $cityName")
+
+                if (!cityName.isNullOrEmpty()) {
+                    buttonLocate.text = getString(R.string.locate) + " " + cityName
+                } else {
+                    buttonLocate.text = getString(R.string.locate)
+                }
+            } else {
+                buttonLocate.text = getString(R.string.locate)
+            }
+        }
+    }
+
+    private fun updateSunriseSunsetLabel(location: android.location.Location) {
+        val ssPair = sunriseSunsetCalc(location)
+        Log.v(packageNameString, "updateSunriseSunsetLabel() ssPair: ${ssPair.first}, ${ssPair.second}")
+
+        // TODO
+    }
+
+    private fun updateSpeedMeter(speed: Float) {
+        Log.v(packageNameString, "updateSpeedMeter() speed: $speed")
+
+        // TODO
+    }
+
+    private fun sunriseSunsetCalc(location: android.location.Location): Pair<String, String> {
+        val loc = com.luckycatlabs.sunrisesunset.dto.Location(location.latitude, location.longitude)
+        val timeZone: TimeZone = TimeZone.getTimeZone("Asia/Tokyo")
+        val calendar: Calendar = Calendar.getInstance(timeZone)
+
+        val calculator = SunriseSunsetCalculator(loc, timeZone)
+        val sunriseTime: String = calculator.getOfficialSunriseForDate(calendar)
+        val sunsetTime: String = calculator.getOfficialSunsetForDate(calendar)
+        println(sunriseTime)
+        println(sunsetTime)
+        return Pair(sunriseTime, sunsetTime)
     }
 
     private fun initDb() {
