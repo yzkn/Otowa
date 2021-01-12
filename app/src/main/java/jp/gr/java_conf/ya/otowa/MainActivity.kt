@@ -11,7 +11,9 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -19,10 +21,8 @@ import androidx.core.app.ActivityCompat
 import androidx.preference.PreferenceManager
 import com.google.android.gms.location.*
 import com.luckycatlabs.sunrisesunset.SunriseSunsetCalculator
-import java.lang.Exception
-import java.lang.Math.round
+import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.math.roundToInt
 
 
 class MainActivity : AppCompatActivity() {
@@ -97,13 +97,45 @@ class MainActivity : AppCompatActivity() {
             }
 
             // 測位ごとに毎回行う
+
+            setLocationViewVisibility(location)
+
             updateLocateButton(location)
-            updateSpeedMeter(location.speed)
+            updateClock(location.time)
+            if (location.hasAltitude()) {
+                updateAltimeter(location.altitude)
+            }
+            if (location.hasBearing()) {
+                updateCompass(location.bearing)
+            }
+            if (location.hasSpeed()) {
+                updateSpeedMeter(location.speed)
+            }
 
             // たまに行う
-            if (0 == (updatedCount % 10)) {
+            if (1 == (updatedCount % 10)) {
                 updateSunriseSunsetLabel(location)
             }
+        }
+    }
+
+    private fun setLocationViewVisibility(location: android.location.Location) {
+        val linearLayoutLocation = findViewById<LinearLayout>(R.id.linear_layout_location)
+        if (location.hasSpeed() && location.hasAltitude() && location.hasBearing()) {
+            linearLayoutLocation.visibility = View.VISIBLE
+        } else {
+            linearLayoutLocation.visibility = View.INVISIBLE
+        }
+    }
+
+    private fun updateClock(utcTime: Long) {
+        val textviewClock = findViewById<TextView>(R.id.textview_clock)
+
+        if (textviewClock != null) {
+            val unixDate = Date(utcTime)
+            val sdf = SimpleDateFormat("HH:mm")
+            sdf.timeZone = TimeZone.getTimeZone("Asia/Tokyo")
+            textviewClock.text = sdf.format(unixDate)
         }
     }
 
@@ -133,10 +165,83 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateSunriseSunsetLabel(location: android.location.Location) {
-        val ssPair = sunriseSunsetCalc(location)
-        Log.v(packageNameString, "updateSunriseSunsetLabel() ssPair: ${ssPair.first}, ${ssPair.second}")
+        Log.v(
+            packageNameString,
+            "updateSunriseSunsetLabel() latitude: ${location.latitude} longitude: ${location.longitude}"
+        )
 
-        // TODO
+        val ssPair = sunriseSunsetCalc(location)
+        Log.v(
+            packageNameString,
+            "updateSunriseSunsetLabel() ssPair: ${ssPair.first}, ${ssPair.second}"
+        )
+
+        val textviewSunrize = findViewById<TextView>(R.id.textview_sunrise)
+        val textviewSunset = findViewById<TextView>(R.id.textview_sunset)
+        if (textviewSunrize != null) {
+            textviewSunrize.text = ssPair.first
+        }
+        if (textviewSunset != null) {
+            textviewSunset.text = ssPair.second
+        }
+    }
+
+    private fun updateCompass(bearing: Float) {
+        Log.v(packageNameString, "updateCpmpass() bearing: $bearing")
+        val textviewCompass = findViewById<TextView>(R.id.textview_compass)
+        if (textviewCompass != null) {
+            textviewCompass.text = getString(R.string.compass_symbol)
+            textviewCompass.rotation = bearing
+        }
+
+        val textviewCompassDirection = findViewById<TextView>(R.id.textview_compass_direction)
+        if (textviewCompassDirection != null) {
+            textviewCompassDirection.text = bearing2direction(bearing)
+        }
+    }
+
+    private fun bearing2direction(bearing: Float): String {
+        when {
+            67.5 > bearing && bearing > 22.5 -> {
+                return "NE"
+            }
+            112.5 > bearing && bearing > 67.5 -> {
+                return "E"
+            }
+            157.5 > bearing && bearing > 112.5 -> {
+                return "SE"
+            }
+            202.5 > bearing && bearing > 157.5 -> {
+                return "S"
+            }
+            247.5 > bearing && bearing > 202.5 -> {
+                return "SW"
+            }
+            292.5 > bearing && bearing > 247.5 -> {
+                return "W"
+            }
+            337.5 > bearing && bearing > 292.5 -> {
+                return "NW"
+            }
+            else -> {
+                return "N"
+            }
+        }
+
+    }
+
+    private fun updateAltimeter(altitude: Double) {
+        Log.v(packageNameString, "updateAltimeter() altitude: $altitude")
+        val textviewAltimeter = findViewById<TextView>(R.id.textview_altimeter)
+        if (textviewAltimeter != null) {
+            var altitudeString = "!!!!m"
+            try {
+                altitudeString = "%04.0f".format(altitude) + "m"
+            } catch (e: Exception) {
+                Log.v(packageNameString, "updateAltimeter() e: $e")
+            }
+            textviewAltimeter.text = altitudeString
+        }
     }
 
     private fun updateSpeedMeter(speed: Float) {
@@ -145,16 +250,16 @@ class MainActivity : AppCompatActivity() {
         if (textviewSpeed != null) {
             var speedString = "!!!"
             try {
-                speedString = "%03.0f".format(speed)
-            } catch (e: Exception){
+                speedString = "%03.0f".format(speed * 3600 / 1000) // km/h
+            } catch (e: Exception) {
                 Log.v(packageNameString, "updateSpeedMeter() e: $e")
             }
             textviewSpeed.text = speedString
 
             // TODO
-            if(speed > 120) {
+            if (speed > 120) {
                 textviewSpeed.setTextColor(Color.RED)
-            } else if(speed > 80) {
+            } else if (speed > 80) {
                 textviewSpeed.setTextColor(Color.rgb(255, 128, 0))
             }
         }
@@ -298,8 +403,8 @@ class MainActivity : AppCompatActivity() {
                 Toast.LENGTH_LONG
             ).show()
             return LocationRequest.create()?.apply {
-                interval = 10000
-                fastestInterval = 5000
+                interval = 5000
+                fastestInterval = 1000
                 priority = LocationRequest.PRIORITY_HIGH_ACCURACY
             }
         } else {
@@ -309,9 +414,10 @@ class MainActivity : AppCompatActivity() {
                 Toast.LENGTH_LONG
             ).show()
             return LocationRequest.create()?.apply {
-                interval = 60000
-                fastestInterval = 60000
-                priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
+                interval = 10000
+                fastestInterval = 5000
+                // priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
+                priority = LocationRequest.PRIORITY_HIGH_ACCURACY
             }
         }
     }
@@ -366,45 +472,55 @@ class MainActivity : AppCompatActivity() {
             Log.v(packageNameString, "checkConnection()")
         }
 
-        val activeNetworks = connectivityManager.allNetworks.mapNotNull {
-            connectivityManager.getNetworkCapabilities(it)
-        }.filter {
-            it.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
-                    it.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-        }
-
-        val isConnected = activeNetworks.isNotEmpty()
+        // val activeNetworks = connectivityManager.allNetworks.mapNotNull {
+        //     connectivityManager.getNetworkCapabilities(it)
+        // }.filter {
+        //     it.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+        //             it.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+        // }
+        // val isConnected = activeNetworks.isNotEmpty()
         // activeNetworks.any { it.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) }
 
-
-        if (isDebugMode) {
-            connectivityManager.allNetworks.forEach { network ->
+        var wifiAvailable = false
+        var cellulerAvailable = false
+        connectivityManager.allNetworks.forEach { network ->
+            if (isDebugMode) {
                 Log.v(
                     packageNameString,
                     "checkConnection() network: $network"
                 )
-                if (connectivityManager.getNetworkCapabilities(network)
-                        ?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
-                ) {
+            }
+            if (connectivityManager.getNetworkCapabilities(network)
+                    ?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
+            ) {
+                if (isDebugMode) {
                     Log.v(
                         packageNameString,
                         "checkConnection() network: $network WIFI"
                     )
-                } else if (connectivityManager.getNetworkCapabilities(network)
-                        ?.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) == true
-                ) {
+                }
+                wifiAvailable = true
+            } else if (connectivityManager.getNetworkCapabilities(network)
+                    ?.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) == true
+            ) {
+                if (isDebugMode) {
                     Log.v(
                         packageNameString,
                         "checkConnection() network: $network CELLULAR"
                     )
                 }
+                cellulerAvailable = true
             }
         }
 
-        Toast.makeText(
-            this,
-            if (isConnected) getString(R.string.network_state_connected) else getString(R.string.network_state_nonetwork),
-            Toast.LENGTH_LONG
-        ).show()
+        val c = getString(R.string.network_state_available)
+        val nc = getString(R.string.network_state_no_networks)
+
+        val textviewNetworkState = findViewById<TextView>(R.id.textview_network_state)
+        if (textviewNetworkState != null) {
+            textviewNetworkState.text = if (wifiAvailable && cellulerAvailable) "wifi/cell $c" else (
+                    if (wifiAvailable) "wifi $c" else (
+                            if (cellulerAvailable) "cell $c" else "$nc"))
+        }
     }
 }

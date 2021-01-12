@@ -40,9 +40,6 @@
     <string name="location_request_highacc">[Locating] started. (High accuracy)</string>
     <string name="location_request_lowacc">[Locating] started. (Low accuracy)</string>
 
-    <string name="network_state_connected">[Network] Connected.</string>
-    <string name="network_state_nonetwork">[Network] No networks found.</string>
-
     <!-- Preference -->
     <string name="title_activity_settings">SettingsActivity</string>
 
@@ -69,4 +66,13 @@
     <string name="current_latitude">Latitude</string>
     <string name="current_longitude">Longitude</string>
     <string name="all_zero">!!!</string>
+    <string name="compass_symbol">↑</string>
+    <string name="compass_symbol_empty"></string>
+    <string name="sunrise_symbol">🌅</string>
+    <string name="sunset_symbol">🌇</string>
+    <string name="clock_8888">88:88</string>
+    <string name="current_time">⌚</string>
+    <string name="km_h">km/h</string>
+    <string name="network_state_available"> available.</string>
+    <string name="network_state_no_networks">no networks.</string>
 </resources>

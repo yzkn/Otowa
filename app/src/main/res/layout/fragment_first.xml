@@ -122,36 +122,208 @@
                 android:layout_width="96dp"
                 android:layout_height="match_parent"
                 android:text="@string/button_volume_dec"
-                app:backgroundTint="#ff0099cc" />
+                app:backgroundTint="#ff0099cc"
+                tools:ignore="ButtonStyle" />
 
             <Button
                 android:id="@+id/button_volume_inc"
                 android:layout_width="96dp"
                 android:layout_height="match_parent"
                 android:text="@string/button_volume_inc"
-                app:backgroundTint="#ff0099cc" />
+                app:backgroundTint="#ff0099cc"
+                tools:ignore="ButtonStyle" />
 
             <Button
                 android:id="@+id/button_volume_max"
                 android:layout_width="96dp"
                 android:layout_height="match_parent"
                 android:text="@string/button_volume_max"
-                app:backgroundTint="#ff0099cc" />
+                app:backgroundTint="#ff0099cc"
+                tools:ignore="ButtonStyle" />
         </LinearLayout>
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/textview_speed"
-        android:fontFamily="@font/dseg14modern_regular"
-        app:fontFamily="@font/dseg14modern_regular"
-        android:padding="50dp"
+    <LinearLayout
+        android:id="@+id/linear_layout_location"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:autoSizeMinTextSize="12dp"
-        android:autoSizeMaxTextSize="720dp"
-        android:autoSizePresetSizes="72dp"
-        android:autoSizeTextType="uniform"
-        android:lines="1"
-        android:gravity="center_horizontal|center_vertical"
-        android:text="@string/all_zero" />
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="256dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/textview_speed"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:autoSizeMaxTextSize="256dp"
+                android:autoSizeMinTextSize="12dp"
+                android:autoSizePresetSizes="72dp"
+                android:autoSizeTextType="uniform"
+                android:fontFamily="@font/dseg14modern_regular"
+                android:gravity="center_horizontal|center_vertical"
+                android:padding="50dp"
+                android:text="@string/all_zero"
+                app:fontFamily="@font/dseg14modern_regular" />
+
+            <TextView
+                android:layout_width="72dp"
+                android:layout_height="match_parent"
+                android:fontFamily="@font/dseg14modern_regular"
+                android:gravity="bottom"
+                android:paddingEnd="6dp"
+                android:paddingBottom="72dp"
+                android:text="@string/km_h"
+                app:fontFamily="@font/dseg14modern_regular" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="96dp"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="96dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/textview_compass_direction"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:autoSizeMaxTextSize="40dp"
+                    android:autoSizeMinTextSize="12dp"
+                    android:autoSizePresetSizes="12dp"
+                    android:autoSizeTextType="uniform"
+                    android:fontFamily="@font/dseg14modern_regular"
+                    android:gravity="center_horizontal|center_vertical"
+                    android:text=""
+                    app:fontFamily="@font/dseg14modern_regular" />
+
+                <TextView
+                    android:id="@+id/textview_compass"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginStart="24dp"
+                    android:layout_marginEnd="24dp"
+                    android:autoSizeMaxTextSize="40dp"
+                    android:autoSizeMinTextSize="12dp"
+                    android:autoSizePresetSizes="12dp"
+                    android:autoSizeTextType="uniform"
+                    android:fontFamily="@font/dseg14modern_regular"
+                    android:gravity="center_horizontal|center_vertical"
+                    android:text="@string/compass_symbol_empty"
+                    app:fontFamily="@font/dseg14modern_regular" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/textview_altimeter"
+                    android:layout_width="match_parent"
+                    android:layout_height="64dp"
+                    android:autoSizeMaxTextSize="64dp"
+                    android:autoSizeMinTextSize="12dp"
+                    android:autoSizePresetSizes="12dp"
+                    android:autoSizeTextType="uniform"
+                    android:fontFamily="@font/dseg14modern_regular"
+                    android:gravity="center_horizontal|center_vertical"
+                    android:padding="5dp"
+                    android:text="@string/all_zero"
+                    app:fontFamily="@font/dseg14modern_regular" />
+
+                <TextView
+                    android:id="@+id/textview_network_state"
+                    android:layout_width="match_parent"
+                    android:layout_height="32dp"
+                    android:fontFamily="@font/dseg14modern_regular"
+                    android:gravity="center_horizontal|center_vertical"
+                    android:padding="5dp"
+                    android:text="@string/network_state_no_networks"
+                    app:fontFamily="@font/dseg14modern_regular" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="6dp"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/current_time" />
+
+                    <TextView
+                        android:id="@+id/textview_clock"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/dseg14modern_regular"
+                        android:gravity="center_horizontal|center_vertical"
+                        android:padding="2dp"
+                        android:text="@string/clock_8888"
+                        app:fontFamily="@font/dseg14modern_regular" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/sunrise_symbol" />
+
+                    <TextView
+                        android:id="@+id/textview_sunrise"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/dseg14modern_regular"
+                        android:gravity="center_horizontal|center_vertical"
+                        android:padding="2dp"
+                        android:text="@string/clock_8888"
+                        app:fontFamily="@font/dseg14modern_regular" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/sunset_symbol" />
+
+                    <TextView
+                        android:id="@+id/textview_sunset"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/dseg14modern_regular"
+                        android:gravity="center_horizontal|center_vertical"
+                        android:padding="2dp"
+                        android:text="@string/clock_8888"
+                        app:fontFamily="@font/dseg14modern_regular" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
 </LinearLayout>
