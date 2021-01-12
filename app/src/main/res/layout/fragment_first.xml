@@ -139,4 +139,19 @@
                 app:backgroundTint="#ff0099cc" />
         </LinearLayout>
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/textview_speed"
+        android:fontFamily="@font/dseg14modern_regular"
+        app:fontFamily="@font/dseg14modern_regular"
+        android:padding="50dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:autoSizeMinTextSize="12dp"
+        android:autoSizeMaxTextSize="720dp"
+        android:autoSizePresetSizes="72dp"
+        android:autoSizeTextType="uniform"
+        android:lines="1"
+        android:gravity="center_horizontal|center_vertical"
+        android:text="@string/all_zero" />
 </LinearLayout>

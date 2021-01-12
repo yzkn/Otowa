@@ -4,6 +4,7 @@ import android.Manifest.permission.*
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.net.*
 import android.os.BatteryManager
 import android.os.Bundle
@@ -11,13 +12,17 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.preference.PreferenceManager
 import com.google.android.gms.location.*
 import com.luckycatlabs.sunrisesunset.SunriseSunsetCalculator
+import java.lang.Exception
+import java.lang.Math.round
 import java.util.*
+import kotlin.math.roundToInt
 
 
 class MainActivity : AppCompatActivity() {
@@ -136,8 +141,23 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateSpeedMeter(speed: Float) {
         Log.v(packageNameString, "updateSpeedMeter() speed: $speed")
+        val textviewSpeed = findViewById<TextView>(R.id.textview_speed)
+        if (textviewSpeed != null) {
+            var speedString = "!!!"
+            try {
+                speedString = "%03.0f".format(speed)
+            } catch (e: Exception){
+                Log.v(packageNameString, "updateSpeedMeter() e: $e")
+            }
+            textviewSpeed.text = speedString
 
-        // TODO
+            // TODO
+            if(speed > 120) {
+                textviewSpeed.setTextColor(Color.RED)
+            } else if(speed > 80) {
+                textviewSpeed.setTextColor(Color.rgb(255, 128, 0))
+            }
+        }
     }
 
     private fun sunriseSunsetCalc(location: android.location.Location): Pair<String, String> {
