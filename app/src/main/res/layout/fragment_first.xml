@@ -227,19 +227,57 @@
                 android:layout_weight="1"
                 android:orientation="vertical">
 
-                <TextView
-                    android:id="@+id/textview_altimeter"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="64dp"
-                    android:autoSizeMaxTextSize="64dp"
-                    android:autoSizeMinTextSize="12dp"
-                    android:autoSizePresetSizes="12dp"
-                    android:autoSizeTextType="uniform"
-                    android:fontFamily="@font/dseg14modern_regular"
-                    android:gravity="center_horizontal|center_vertical"
-                    android:padding="5dp"
-                    android:text="@string/all_zero"
-                    app:fontFamily="@font/dseg14modern_regular" />
+                    android:layout_weight="1"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/textview_pressure"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:autoSizeMaxTextSize="18dp"
+                        android:autoSizeMinTextSize="8dp"
+                        android:autoSizePresetSizes="8dp"
+                        android:autoSizeTextType="uniform"
+                        android:fontFamily="@font/dseg14modern_regular"
+                        android:gravity="center_horizontal|center_vertical"
+                        android:padding="5dp"
+                        android:text="@string/all_zero_pressure"
+                        app:fontFamily="@font/dseg14modern_regular" />
+
+                    <TextView
+                        android:id="@+id/textview_ambient_temperature"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:autoSizeMaxTextSize="18dp"
+                        android:autoSizeMinTextSize="8dp"
+                        android:autoSizePresetSizes="8dp"
+                        android:autoSizeTextType="uniform"
+                        android:fontFamily="@font/dseg14modern_regular"
+                        android:gravity="center_horizontal|center_vertical"
+                        android:padding="5dp"
+                        android:text="@string/all_zero_temp"
+                        app:fontFamily="@font/dseg14modern_regular" />
+
+                    <TextView
+                        android:id="@+id/textview_altimeter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:autoSizeMaxTextSize="18dp"
+                        android:autoSizeMinTextSize="8dp"
+                        android:autoSizePresetSizes="8dp"
+                        android:autoSizeTextType="uniform"
+                        android:fontFamily="@font/dseg14modern_regular"
+                        android:gravity="center_horizontal|center_vertical"
+                        android:padding="5dp"
+                        android:text="@string/all_zero_altimeter"
+                        app:fontFamily="@font/dseg14modern_regular" />
+                </LinearLayout>
 
                 <TextView
                     android:id="@+id/textview_network_state"

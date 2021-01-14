@@ -234,9 +234,9 @@ class MainActivity : AppCompatActivity() {
         Log.v(packageNameString, "updateAltimeter() altitude: $altitude")
         val textviewAltimeter = findViewById<TextView>(R.id.textview_altimeter)
         if (textviewAltimeter != null) {
-            var altitudeString = "!!!!m"
+            var altitudeString = getString(R.string.all_zero_altimeter)
             try {
-                altitudeString = "%04.0f".format(altitude) + "m"
+                altitudeString = "%04.0f".format(altitude) + getString(R.string.altimeter_m)
             } catch (e: Exception) {
                 Log.v(packageNameString, "updateAltimeter() e: $e")
             }

@@ -4,9 +4,14 @@ import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.app.Dialog
 import android.content.Context.AUDIO_SERVICE
+import android.content.Context.SENSOR_SERVICE
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.media.AudioManager
 import android.net.Uri
 import android.os.BatteryManager
@@ -33,7 +38,6 @@ import twitter4j.TwitterException
 import twitter4j.TwitterFactory
 import twitter4j.conf.ConfigurationBuilder
 import java.lang.Double.parseDouble
-import java.lang.Exception
 import java.lang.Integer.max
 import java.lang.Integer.min
 
@@ -51,6 +55,7 @@ class FirstFragment : Fragment() {
     var packageNameString = ""
 
     lateinit var audioManager: AudioManager
+    lateinit var sensorManager: SensorManager
 
     lateinit var oauthTwitter: Twitter
     lateinit var apiTwitter: Twitter
@@ -63,6 +68,7 @@ class FirstFragment : Fragment() {
         setHasOptionsMenu(true)
 
         audioManager = context?.getSystemService(AUDIO_SERVICE) as AudioManager
+        sensorManager = context?.getSystemService(SENSOR_SERVICE) as SensorManager
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -126,6 +132,9 @@ class FirstFragment : Fragment() {
             // UIパーツの取得
             val linearLayoutFirst = createdView.findViewById<LinearLayout>(R.id.linear_layout_first)
             val linearLayoutTweet = createdView.findViewById<LinearLayout>(R.id.linear_layout_tweet)
+            val linearLayoutLocation = createdView.findViewById<LinearLayout>(R.id.linear_layout_location)
+
+            linearLayoutLocation.visibility = View.INVISIBLE;
 
             // 認証済みか否かで、UIの可視状態を切り替え
             if (accessKey.length > 40 && accessSecret.length > 40) {
@@ -228,6 +237,7 @@ class FirstFragment : Fragment() {
 
                 checkVolume()
                 changeScreenBrightness()
+                initializeSensors()
 
                 iconImage.setOnLongClickListener {
                     var stringList: MutableList<String>
@@ -278,6 +288,57 @@ class FirstFragment : Fragment() {
                 }
                 linearLayoutFirst.visibility = View.VISIBLE;
                 linearLayoutTweet.visibility = View.GONE;
+            }
+        }
+    }
+
+    private fun initializeSensors() {
+        if (::sensorManager.isInitialized) {
+            val sensorList = sensorManager.getSensorList(Sensor.TYPE_ALL)
+            if (isDebugMode) {
+                Log.v(
+                    packageNameString,
+                    "initializeSensors() sensors:"
+                )
+            }
+            if (sensorList.size > 0) {
+                for (s in sensorList) {
+                    if (isDebugMode) {
+                        Log.v(packageNameString, "initializeSensors() sensors: s: $s")
+                    }
+                    sensorManager.registerListener(
+                        object : SensorEventListener {
+                            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+                            }
+
+                            override fun onSensorChanged(event: SensorEvent) {
+                                // if (isDebugMode) {
+                                //     Log.v(
+                                //         packageNameString,
+                                //         "initializeSensors() onSensorChanged() sensor: ${event.sensor}"
+                                //     )
+                                // }
+                                if (event.sensor.type == Sensor.TYPE_PRESSURE) {
+                                    val resultValues: FloatArray = event.values.clone()
+                                    if (::createdView.isInitialized) {
+                                        val textView =
+                                            createdView.findViewById(R.id.textview_pressure) as TextView
+                                        textView.text =
+                                            "%04.0f".format(resultValues[0]) + getString(R.string.pressure_hpa)
+                                    }
+                                } else if (event.sensor.type == Sensor.TYPE_AMBIENT_TEMPERATURE) {
+                                    val resultValues: FloatArray = event.values.clone()
+                                    if (::createdView.isInitialized) {
+                                        val textView =
+                                            createdView.findViewById(R.id.textview_ambient_temperature) as TextView
+                                        textView.text =
+                                            "%02.1f".format(resultValues[0]) + getString(R.string.temp_c)
+                                    }
+                                }
+                            }
+                        }, s, SensorManager.SENSOR_DELAY_NORMAL
+                    )
+                }
             }
         }
     }
@@ -417,7 +478,10 @@ class FirstFragment : Fragment() {
 
         if (isDebugMode) {
             Log.v(packageNameString, "getCkCs() env CK: " + getMetadata("OTOWA_CONSUMER_KEY"))
-            Log.v(packageNameString, "getCkCs() env CS: " + getMetadata("OTOWA_CONSUMER_SECRET"))
+            Log.v(
+                packageNameString,
+                "getCkCs() env CS: " + getMetadata("OTOWA_CONSUMER_SECRET")
+            )
         }
         return Pair(getMetadata("OTOWA_CONSUMER_KEY"), getMetadata("OTOWA_CONSUMER_SECRET"))
     }
@@ -599,7 +663,10 @@ class FirstFragment : Fragment() {
                 commit()
             }
             if (isDebugMode) {
-                Log.v(packageNameString, "reloadProfileImage() uri: ${usr.profileImageURLHttps}")
+                Log.v(
+                    packageNameString,
+                    "reloadProfileImage() uri: ${usr.profileImageURLHttps}"
+                )
             }
 
             withContext(Dispatchers.Main) {
