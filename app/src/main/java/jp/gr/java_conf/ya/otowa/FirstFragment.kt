@@ -786,8 +786,7 @@ class FirstFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 if (isDebugMode) {
-                    Log.v(packageNameString, "reverseGeocode() latString: $latString $e")
-                    Log.v(packageNameString, "reverseGeocode() lonString: $lonString $e")
+                    Log.v(packageNameString, "reverseGeocode() latString: $latString lonString: $lonString $e")
                 }
             }
         }

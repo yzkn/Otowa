@@ -64,6 +64,36 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        app:summary="@string/home_area_summary"
+        app:title="@string/home_area">
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            app:key="pref_home_area_radius"
+            app:title="@string/home_area_radius"
+            app:useSimpleSummaryProvider="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            app:key="pref_home_area_latitude"
+            app:title="@string/home_area_latitude"
+            app:useSimpleSummaryProvider="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            app:key="pref_home_area_longitude"
+            app:title="@string/home_area_longitude"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
         app:summary="@string/app_summary"
         app:title="@string/app">
 

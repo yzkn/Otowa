@@ -79,28 +79,49 @@ class MainActivity : AppCompatActivity() {
 
     private fun locate(locationResult: LocationResult) {
         for (location in locationResult.locations) {
-            updatedCount++
-            if (isDebugMode) {
-                Log.v(
-                    packageNameString,
-                    "onCreate() GPS $updatedCount ${location.latitude} , ${location.longitude}"
-                )
-            }
+            if (inHomeArea(location)) {
+                if (isDebugMode) {
+                    Log.v(
+                        packageNameString,
+                        "onCreate() GPS $updatedCount ${location.latitude} , ${location.longitude} inHomeArea"
+                    )
+                }
 
-            with(
-                PreferenceManager.getDefaultSharedPreferences(application).edit()
-            ) {
-                putString("pref_current_latitude", location.latitude.toString())
-                putString("pref_current_longitude", location.longitude.toString())
+                with(
+                    PreferenceManager.getDefaultSharedPreferences(application).edit()
+                ) {
+                    putString("pref_current_latitude", "")
+                    putString("pref_current_longitude", "")
 
-                commit()
+                    commit()
+                }
+
+                // 測位ボタンを無効化する
+                updateLocateButton()
+            } else {
+                updatedCount++
+                if (isDebugMode) {
+                    Log.v(
+                        packageNameString,
+                        "onCreate() GPS $updatedCount ${location.latitude} , ${location.longitude}"
+                    )
+                }
+
+                with(
+                    PreferenceManager.getDefaultSharedPreferences(application).edit()
+                ) {
+                    putString("pref_current_latitude", location.latitude.toString())
+                    putString("pref_current_longitude", location.longitude.toString())
+
+                    commit()
+                }
+
+                // 測位ボタンを有効化する
+                updateLocateButton(location)
             }
 
             // 測位ごとに毎回行う
-
             setLocationViewVisibility(location)
-
-            updateLocateButton(location)
             updateClock(location.time)
             if (location.hasAltitude()) {
                 updateAltimeter(location.altitude)
@@ -117,6 +138,90 @@ class MainActivity : AppCompatActivity() {
                 updateSunriseSunsetLabel(location)
             }
         }
+    }
+
+    private fun inHomeArea(location: android.location.Location): Boolean {
+        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
+        val homeAreaLatitudeString =
+            sharedPreferences.getString("pref_home_area_latitude", "") ?: ""
+        val homeAreaLongitudeString =
+            sharedPreferences.getString("pref_home_area_longitude", "") ?: ""
+        val homeAreaRadiusString = sharedPreferences.getString("pref_home_area_radius", "") ?: ""
+
+        if (homeAreaLatitudeString != "" && homeAreaLongitudeString != "" && homeAreaRadiusString != "") {
+            if (isDebugMode) {
+                Log.v(
+                    packageNameString, "inHomeArea() !empty:"
+                            + " homeAreaLatitudeString: $homeAreaLatitudeString"
+                            + " homeAreaLongitudeString: $homeAreaLongitudeString"
+                            + " homeAreaRadiusString: $homeAreaRadiusString"
+                )
+            }
+
+            try {
+                var homeAreaLatitude = java.lang.Double.parseDouble(homeAreaLatitudeString)
+                var homeAreaLongitude = java.lang.Double.parseDouble(homeAreaLongitudeString)
+                var homeAreaRadius = java.lang.Double.parseDouble(homeAreaRadiusString)
+                if (isDebugMode) {
+                    Log.v(
+                        packageNameString, "inHomeArea() parsed:"
+                                + " homeAreaLatitude: $homeAreaLatitude"
+                                + " homeAreaLongitude: $homeAreaLongitude"
+                                + " homeAreaRadius: $homeAreaRadius"
+                    )
+                }
+
+                val results = floatArrayOf(0F, 0F, 0F)
+                try {
+                    android.location.Location.distanceBetween(
+                        location.latitude,
+                        location.longitude,
+                        homeAreaLatitude,
+                        homeAreaLongitude,
+                        results
+                    )
+                    if (results.isNotEmpty()) {
+                        val distance = results[0].toDouble()
+                        if (distance < homeAreaRadius) {
+                            if (isDebugMode) {
+                                Log.v(
+                                    packageNameString,
+                                    "inHomeArea() home-area:"
+                                            + " distance: $distance"
+                                            + " homeAreaRadius: $homeAreaRadius"
+                                )
+                            }
+                            return true
+                        }
+                    }
+                } catch (e: Exception) {
+                    if (isDebugMode) {
+                        Log.e(packageNameString, "inHomeArea() $e")
+                    }
+                }
+            } catch (e: Exception) {
+                if (isDebugMode) {
+                    Log.e(
+                        packageNameString, "inHomeArea()"
+                                + " homeAreaLatitudeString: $homeAreaLatitudeString"
+                                + " homeAreaLongitudeString: $homeAreaLongitudeString"
+                                + " homeAreaRadiusString: $homeAreaRadiusString $e"
+                    )
+                }
+            }
+        } else {
+            // 未設定の場合
+            if (isDebugMode) {
+                Log.v(
+                    packageNameString, "inHomeArea() empty"
+                            + " homeAreaLatitudeString: $homeAreaLatitudeString"
+                            + " homeAreaLongitudeString: $homeAreaLongitudeString"
+                            + " homeAreaRadiusString: $homeAreaRadiusString"
+                )
+            }
+        }
+        return false
+
     }
 
     private fun setLocationViewVisibility(location: android.location.Location) {
@@ -139,12 +244,22 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun updateLocateButton() {
+        // ボタンを無効化する
+        val buttonLocate = findViewById<Button>(R.id.button_locate)
+        if (buttonLocate != null) {
+            buttonLocate.isEnabled = false
+            buttonLocate.textSize = 14F
+            buttonLocate.text = getString(R.string.locate)
+        }
+    }
+
     private fun updateLocateButton(location: android.location.Location) {
         // 測位に成功したらボタンのテキストを更新する
         val buttonLocate = findViewById<Button>(R.id.button_locate)
         if (buttonLocate != null) {
             buttonLocate.isEnabled = true
-            buttonLocate.textSize = 14F
+            buttonLocate.textSize = 8F
 
 
             // 逆ジオコーディング
@@ -518,9 +633,10 @@ class MainActivity : AppCompatActivity() {
 
         val textviewNetworkState = findViewById<TextView>(R.id.textview_network_state)
         if (textviewNetworkState != null) {
-            textviewNetworkState.text = if (wifiAvailable && cellulerAvailable) "wifi/cell $c" else (
-                    if (wifiAvailable) "wifi $c" else (
-                            if (cellulerAvailable) "cell $c" else "$nc"))
+            textviewNetworkState.text =
+                if (wifiAvailable && cellulerAvailable) "wifi/cell $c" else (
+                        if (wifiAvailable) "wifi $c" else (
+                                if (cellulerAvailable) "cell $c" else "$nc"))
         }
     }
 }
