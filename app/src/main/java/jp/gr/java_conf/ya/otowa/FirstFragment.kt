@@ -762,6 +762,9 @@ class FirstFragment : Fragment() {
                                 val buf = StringBuilder().also {
                                     it.append(createdView.findViewById<EditText>(R.id.tweet_prefix).text)
                                     it.append(cityName)
+                                    it.append(" ")
+                                    it.append("https://www.google.com/maps/search/?api=1&query=${latString},${lonString}")
+                                    it.append(" ")
                                     it.append(createdView.findViewById<EditText>(R.id.tweet_suffix).text)
                                 }
                                 val tweettext = buf.toString()
