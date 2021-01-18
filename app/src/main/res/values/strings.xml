@@ -66,6 +66,12 @@
     <string name="current_latitude">Latitude</string>
     <string name="current_longitude">Longitude</string>
     <string name="all_zero">!!!</string>
+    <string name="all_zero_altimeter">!!!!\nm</string>
+    <string name="altimeter_m">!\nm</string>
+    <string name="temp_c">\n°C</string>
+    <string name="all_zero_temp">!!.!\n°C</string>
+    <string name="pressure_hpa">\nhPa</string>
+    <string name="all_zero_pressure">!!!!\nhPa</string>
     <string name="compass_symbol">↑</string>
     <string name="compass_symbol_empty"></string>
     <string name="sunrise_symbol">🌅</string>
