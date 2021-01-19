@@ -16,18 +16,19 @@ open class AppDBController(context: Context) {
         sqLiteDatabase = appAssetsSQLite.writableDatabase
     }
 
-    fun searchCity(lat: Double, lng: Double): String? {
-
-        var cityName: String = ""
+    fun searchCity(lat: Double, lng: Double): Pair<String, String>? {
+        var cityName = ""
+        var townName = ""
         try {
-            val selectQql: String =
-                " SELECT * , ( abs ( ? - 緯度 ) + abs ( ? - 経度 ) ) as d FROM city ORDER BY d ASC LIMIT 1 ; "
+            val selectQql =
+                " SELECT * , ( abs ( ? - 緯度 ) + abs ( ? - 経度 ) ) as d FROM town ORDER BY d ASC LIMIT 1 ; "
             cursor =
                 sqLiteDatabase?.rawQuery(selectQql, arrayOf(lat.toString(), lng.toString()))
                     ?: return null
 
             if (cursor.moveToNext()) {
                 cityName = cursor.getString(cursor.getColumnIndex("市区町村名")) ?: ""
+                townName = cursor.getString(cursor.getColumnIndex("大字町丁目名")) ?: ""
             }
         }catch (e: Exception){
         } finally {
@@ -35,7 +36,7 @@ open class AppDBController(context: Context) {
                 cursor.close()
             }
         }
-        return cityName
+        return Pair(cityName, townName)
     }
 
     fun close() {

@@ -132,7 +132,8 @@ class FirstFragment : Fragment() {
             // UIパーツの取得
             val linearLayoutFirst = createdView.findViewById<LinearLayout>(R.id.linear_layout_first)
             val linearLayoutTweet = createdView.findViewById<LinearLayout>(R.id.linear_layout_tweet)
-            val linearLayoutLocation = createdView.findViewById<LinearLayout>(R.id.linear_layout_location)
+            val linearLayoutLocation =
+                createdView.findViewById<LinearLayout>(R.id.linear_layout_location)
 
             linearLayoutLocation.visibility = View.INVISIBLE;
 
@@ -250,12 +251,12 @@ class FirstFragment : Fragment() {
 
                         withContext(Dispatchers.Main) {
                             AlertDialog.Builder(activity)
-                                .setTitle(getString(R.string.tweet_delete_dialog))
+                                .setTitle(getStr(R.string.tweet_delete_dialog))
                                 .setItems(stringList.toTypedArray()) { _, which ->
                                     AlertDialog.Builder(activity)
-                                        .setTitle(getString(R.string.tweet_delete_dialog))
+                                        .setTitle(getStr(R.string.tweet_delete_dialog))
                                         .setMessage(stringList[which])
-                                        .setPositiveButton(getString(R.string.delete_tweet)) { _, _ ->
+                                        .setPositiveButton(getStr(R.string.delete_tweet)) { _, _ ->
                                             deleteTweet(tweetList[which].id)
                                         }
                                         .show()
@@ -318,13 +319,14 @@ class FirstFragment : Fragment() {
                                 //         "initializeSensors() onSensorChanged() sensor: ${event.sensor}"
                                 //     )
                                 // }
+
                                 if (event.sensor.type == Sensor.TYPE_PRESSURE) {
                                     val resultValues: FloatArray = event.values.clone()
                                     if (::createdView.isInitialized) {
                                         val textView =
                                             createdView.findViewById(R.id.textview_pressure) as TextView
                                         textView.text =
-                                            "%04.0f".format(resultValues[0]) + getString(R.string.pressure_hpa)
+                                            "%04.0f".format(resultValues[0]) + getStr(R.string.pressure_hpa)
                                     }
                                 } else if (event.sensor.type == Sensor.TYPE_AMBIENT_TEMPERATURE) {
                                     val resultValues: FloatArray = event.values.clone()
@@ -332,7 +334,7 @@ class FirstFragment : Fragment() {
                                         val textView =
                                             createdView.findViewById(R.id.textview_ambient_temperature) as TextView
                                         textView.text =
-                                            "%02.1f".format(resultValues[0]) + getString(R.string.temp_c)
+                                            "%02.1f".format(resultValues[0]) + getStr(R.string.temp_c)
                                     }
                                 }
                             }
@@ -638,7 +640,7 @@ class FirstFragment : Fragment() {
         val factory = TwitterFactory(config)
 
         // キャッシュ
-        apiTwitter = factory.getInstance()
+        apiTwitter = factory.instance
 
         return apiTwitter
     }
@@ -679,7 +681,7 @@ class FirstFragment : Fragment() {
 
                 Toast.makeText(
                     activity,
-                    getString(R.string.reloaded),
+                    getStr(R.string.reloaded),
                     Toast.LENGTH_LONG
                 ).show()
             }
@@ -705,7 +707,7 @@ class FirstFragment : Fragment() {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(
                         activity,
-                        getString(R.string.tweeted) + tweettext,
+                        getStr(R.string.tweeted) + tweettext,
                         Toast.LENGTH_LONG
                     ).show()
                 }
@@ -723,7 +725,7 @@ class FirstFragment : Fragment() {
                     withContext(Dispatchers.Main) {
                         Toast.makeText(
                             activity,
-                            getString(R.string.deleted),
+                            getStr(R.string.deleted),
                             Toast.LENGTH_LONG
                         ).show()
                     }
@@ -746,39 +748,41 @@ class FirstFragment : Fragment() {
 
         if (latString != "" && lonString != "") {
             try {
-                var currentLatitude = parseDouble(latString)
-                var currentLongitude = parseDouble(lonString)
+                val currentLatitude = parseDouble(latString)
+                val currentLongitude = parseDouble(lonString)
 
                 // 測位に成功している場合
                 if (currentLatitude >= -90.0 && currentLongitude >= -180.0) {
                     // 逆ジオコーディング
                     if (::cityDbController.isInitialized) {
-                        val cityName =
+                        val searched =
                             cityDbController.searchCity(currentLatitude, currentLongitude)
-                        Log.v(packageNameString, "reverseGeocode() City: $cityName")
+                        Log.v(
+                            packageNameString,
+                            "reverseGeocode() searched: ${searched?.first} ${searched?.second}"
+                        )
 
-                        if (!cityName.isNullOrEmpty()) {
+                        if (!searched?.first.isNullOrEmpty() && !searched?.second.isNullOrEmpty()) {
                             if (direct) {
                                 val buf = StringBuilder().also {
                                     it.append(createdView.findViewById<EditText>(R.id.tweet_prefix).text)
-                                    it.append(cityName)
+                                    it.append(searched?.first)
+                                    it.append(searched?.second)
                                     it.append(" ")
                                     it.append("https://www.google.com/maps/search/?api=1&query=${latString},${lonString}")
                                     it.append(" ")
                                     it.append(createdView.findViewById<EditText>(R.id.tweet_suffix).text)
                                 }
-                                val tweettext = buf.toString()
-                                updateTweet(tweettext)
+                                updateTweet(buf.toString())
                             } else {
                                 val et = view?.findViewById<EditText>(R.id.tweet_main)
                                 if (et != null) {
-                                    val tweetMainText =
-                                        et.text.toString()
+                                    val tweetMainText = et.text.toString()
                                     et.setText(
-                                        (if (tweetMainText.isNotEmpty()) "$tweetMainText " else "") + cityName
+                                        (if (tweetMainText.isNotEmpty()) "$tweetMainText " else "") + searched?.first + searched?.second
                                     )
                                     et.requestFocus()
-                                    et.setSelection(et.getText().length)
+                                    et.setSelection(et.text.length)
                                 }
                             }
                         }
@@ -786,9 +790,20 @@ class FirstFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 if (isDebugMode) {
-                    Log.v(packageNameString, "reverseGeocode() latString: $latString lonString: $lonString $e")
+                    Log.v(
+                        packageNameString,
+                        "reverseGeocode() latString: $latString lonString: $lonString $e"
+                    )
                 }
             }
+        }
+    }
+
+    private fun getStr(resId: Int): String {
+        return try {
+            getString(resId)
+        } catch (e: Exception) {
+            ""
         }
     }
 }

@@ -1,6 +1,7 @@
 package jp.gr.java_conf.ya.otowa
 
 import android.Manifest.permission.*
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
@@ -159,9 +160,9 @@ class MainActivity : AppCompatActivity() {
             }
 
             try {
-                var homeAreaLatitude = java.lang.Double.parseDouble(homeAreaLatitudeString)
-                var homeAreaLongitude = java.lang.Double.parseDouble(homeAreaLongitudeString)
-                var homeAreaRadius = java.lang.Double.parseDouble(homeAreaRadiusString)
+                val homeAreaLatitude = java.lang.Double.parseDouble(homeAreaLatitudeString)
+                val homeAreaLongitude = java.lang.Double.parseDouble(homeAreaLongitudeString)
+                val homeAreaRadius = java.lang.Double.parseDouble(homeAreaRadiusString)
                 if (isDebugMode) {
                     Log.v(
                         packageNameString, "inHomeArea() parsed:"
@@ -220,8 +221,8 @@ class MainActivity : AppCompatActivity() {
                 )
             }
         }
-        return false
 
+        return false
     }
 
     private fun setLocationViewVisibility(location: android.location.Location) {
@@ -250,10 +251,11 @@ class MainActivity : AppCompatActivity() {
         if (buttonLocate != null) {
             buttonLocate.isEnabled = false
             buttonLocate.textSize = 14F
-            buttonLocate.text = getString(R.string.locate)
+            buttonLocate.text = getStr(R.string.locate)
         }
     }
 
+    @SuppressLint("SetTextI18n")
     private fun updateLocateButton(location: android.location.Location) {
         // 測位に成功したらボタンのテキストを更新する
         val buttonLocate = findViewById<Button>(R.id.button_locate)
@@ -261,20 +263,23 @@ class MainActivity : AppCompatActivity() {
             buttonLocate.isEnabled = true
             buttonLocate.textSize = 8F
 
-
             // 逆ジオコーディング
             if (::cityDbController.isInitialized) {
-                val cityName =
+                val searched =
                     cityDbController.searchCity(location.latitude, location.longitude)
-                Log.v(packageNameString, "reverseGeocode() City: $cityName")
+                Log.v(
+                    packageNameString,
+                    "reverseGeocode() searched: ${searched?.first} ${searched?.second}"
+                )
 
-                if (!cityName.isNullOrEmpty()) {
-                    buttonLocate.text = getString(R.string.locate) + " " + cityName
+                if (!searched?.first.isNullOrEmpty() && !searched?.second.isNullOrEmpty()) {
+                    buttonLocate.text =
+                        getStr(R.string.locate) + "\n" + searched?.first + "\n" + searched?.second
                 } else {
-                    buttonLocate.text = getString(R.string.locate)
+                    buttonLocate.text = getStr(R.string.locate)
                 }
             } else {
-                buttonLocate.text = getString(R.string.locate)
+                buttonLocate.text = getStr(R.string.locate)
             }
         }
     }
@@ -305,7 +310,7 @@ class MainActivity : AppCompatActivity() {
         Log.v(packageNameString, "updateCpmpass() bearing: $bearing")
         val textviewCompass = findViewById<TextView>(R.id.textview_compass)
         if (textviewCompass != null) {
-            textviewCompass.text = getString(R.string.compass_symbol)
+            textviewCompass.text = getStr(R.string.compass_symbol)
             textviewCompass.rotation = bearing
         }
 
@@ -342,16 +347,15 @@ class MainActivity : AppCompatActivity() {
                 return "N"
             }
         }
-
     }
 
     private fun updateAltimeter(altitude: Double) {
         Log.v(packageNameString, "updateAltimeter() altitude: $altitude")
         val textviewAltimeter = findViewById<TextView>(R.id.textview_altimeter)
         if (textviewAltimeter != null) {
-            var altitudeString = getString(R.string.all_zero_altimeter)
+            var altitudeString = getStr(R.string.all_zero_altimeter)
             try {
-                altitudeString = "%04.0f".format(altitude) + getString(R.string.altimeter_m)
+                altitudeString = "%04.0f".format(altitude) + getStr(R.string.altimeter_m)
             } catch (e: Exception) {
                 Log.v(packageNameString, "updateAltimeter() e: $e")
             }
@@ -371,7 +375,6 @@ class MainActivity : AppCompatActivity() {
             }
             textviewSpeed.text = speedString
 
-            // TODO
             if (speed > 120) {
                 textviewSpeed.setTextColor(Color.RED)
             } else if (speed > 80) {
@@ -514,7 +517,7 @@ class MainActivity : AppCompatActivity() {
         if (acc) {
             Toast.makeText(
                 this,
-                getString(R.string.location_request_highacc),
+                getStr(R.string.location_request_highacc),
                 Toast.LENGTH_LONG
             ).show()
             return LocationRequest.create()?.apply {
@@ -525,7 +528,7 @@ class MainActivity : AppCompatActivity() {
         } else {
             Toast.makeText(
                 this,
-                getString(R.string.location_request_lowacc),
+                getStr(R.string.location_request_lowacc),
                 Toast.LENGTH_LONG
             ).show()
             return LocationRequest.create()?.apply {
@@ -628,8 +631,8 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        val c = getString(R.string.network_state_available)
-        val nc = getString(R.string.network_state_no_networks)
+        val c = getStr(R.string.network_state_available)
+        val nc = getStr(R.string.network_state_no_networks)
 
         val textviewNetworkState = findViewById<TextView>(R.id.textview_network_state)
         if (textviewNetworkState != null) {
@@ -637,6 +640,14 @@ class MainActivity : AppCompatActivity() {
                 if (wifiAvailable && cellulerAvailable) "wifi/cell $c" else (
                         if (wifiAvailable) "wifi $c" else (
                                 if (cellulerAvailable) "cell $c" else "$nc"))
+        }
+    }
+
+    private fun getStr(resId: Int): String {
+        return try {
+            getString(resId)
+        } catch (e: Exception) {
+            ""
         }
     }
 }

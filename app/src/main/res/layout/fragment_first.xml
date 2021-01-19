@@ -151,7 +151,7 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="256dp"
+            android:layout_height="200dp"
             android:orientation="horizontal">
 
             <TextView
@@ -159,7 +159,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:autoSizeMaxTextSize="256dp"
+                android:autoSizeMaxTextSize="200dp"
                 android:autoSizeMinTextSize="12dp"
                 android:autoSizePresetSizes="72dp"
                 android:autoSizeTextType="uniform"
@@ -182,20 +182,20 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="96dp"
+            android:layout_height="128dp"
             android:orientation="horizontal">
 
             <LinearLayout
                 android:layout_width="96dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:orientation="vertical">
 
                 <TextView
                     android:id="@+id/textview_compass_direction"
                     android:layout_width="match_parent"
-                    android:layout_height="48dp"
+                    android:layout_height="32dp"
                     android:layout_weight="1"
-                    android:autoSizeMaxTextSize="40dp"
+                    android:autoSizeMaxTextSize="64dp"
                     android:autoSizeMinTextSize="12dp"
                     android:autoSizePresetSizes="12dp"
                     android:autoSizeTextType="uniform"
@@ -206,18 +206,13 @@
 
                 <TextView
                     android:id="@+id/textview_compass"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:layout_marginStart="24dp"
-                    android:layout_marginEnd="24dp"
-                    android:autoSizeMaxTextSize="40dp"
-                    android:autoSizeMinTextSize="12dp"
-                    android:autoSizePresetSizes="12dp"
-                    android:autoSizeTextType="uniform"
-                    android:fontFamily="@font/dseg14modern_regular"
-                    android:gravity="center_horizontal|center_vertical"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:layout_margin="16dp"
+                    android:gravity="center_vertical|center_horizontal"
+                    android:padding="8dp"
                     android:text="@string/compass_symbol_empty"
-                    app:fontFamily="@font/dseg14modern_regular" />
+                    android:textSize="32sp" />
 
             </LinearLayout>
 
@@ -282,7 +277,7 @@
                 <TextView
                     android:id="@+id/textview_network_state"
                     android:layout_width="match_parent"
-                    android:layout_height="32dp"
+                    android:layout_height="64dp"
                     android:fontFamily="@font/dseg14modern_regular"
                     android:gravity="center_horizontal|center_vertical"
                     android:padding="5dp"
