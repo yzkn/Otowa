@@ -13,15 +13,20 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.Button
-import android.widget.LinearLayout
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
+import com.beust.klaxon.Klaxon
 import com.google.android.gms.location.*
 import com.luckycatlabs.sunrisesunset.SunriseSunsetCalculator
+import com.squareup.picasso.Picasso
+import jp.gr.java_conf.ya.otowa.forecast.WeatherForecast
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.*
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
@@ -51,6 +56,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var connectivityManager: ConnectivityManager
 
     private var areas: Array<WeatherArea> = emptyArray()
+    private lateinit var imageWeather: ImageView
+    private lateinit var textViewWeather: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -86,7 +93,7 @@ class MainActivity : AppCompatActivity() {
         initDb()
     }
 
-    private fun readCsv(filename: String){
+    private fun readCsv(filename: String) {
         try {
             val file = resources.assets.open(filename)
             val fileReader = BufferedReader(InputStreamReader(file))
@@ -99,17 +106,17 @@ class MainActivity : AppCompatActivity() {
                         fetchCSV(line)
                     }
                 }
-                i++;
+                i++
             }
 
-        }catch (e: IOException) {
+        } catch (e: IOException) {
             if (isDebugMode) {
                 Log.e(packageNameString, "readCsv() $e")
             }
         }
     }
 
-    private fun fetchCSV(line: Array<String>){
+    private fun fetchCSV(line: Array<String>) {
         val area = WeatherArea(
             id = line[0],
             city = line[1],
@@ -124,63 +131,109 @@ class MainActivity : AppCompatActivity() {
 
     private fun locate(locationResult: LocationResult) {
         for (location in locationResult.locations) {
-            if (inHomeArea(location)) {
+            try {
                 if (isDebugMode) {
-                    Log.v(
-                        packageNameString,
-                        "onCreate() GPS $updatedCount ${location.latitude} , ${location.longitude} inHomeArea"
-                    )
+                    Log.v(packageNameString, "locate() location")
                 }
 
-                with(
-                    PreferenceManager.getDefaultSharedPreferences(application).edit()
-                ) {
-                    putString("pref_current_latitude", "")
-                    putString("pref_current_longitude", "")
-
-                    commit()
-                }
-
-                // 測位ボタンを無効化する
-                updateLocateButton()
-            } else {
                 updatedCount++
+
+                if (inHomeArea(location)) {
+                    if (isDebugMode) {
+                        Log.v(
+                            packageNameString,
+                            "locate() inHomeArea(location) $updatedCount ${location.latitude} , ${location.longitude} inHomeArea"
+                        )
+                    }
+
+                    with(
+                        PreferenceManager.getDefaultSharedPreferences(application).edit()
+                    ) {
+                        putString("pref_current_latitude", "")
+                        putString("pref_current_longitude", "")
+
+                        commit()
+                    }
+
+                    // 測位ボタンを無効化する
+                    updateLocateButton()
+                } else {
+                    if (isDebugMode) {
+                        Log.v(
+                            packageNameString,
+                            "onCreate() GPS $updatedCount ${location.latitude} , ${location.longitude}"
+                        )
+                    }
+
+                    with(
+                        PreferenceManager.getDefaultSharedPreferences(application).edit()
+                    ) {
+                        putString("pref_current_latitude", location.latitude.toString())
+                        putString("pref_current_longitude", location.longitude.toString())
+
+                        commit()
+                    }
+
+                    // 測位ボタンを有効化する
+                    updateLocateButton(location.latitude, location.longitude)
+                }
+
+                // 測位ごとに毎回行う
+                try {
+                    if (isDebugMode) {
+                        Log.v(packageNameString, "locate() 測位ごとに毎回行う")
+                    }
+
+                    setLocationViewVisibility(location.hasSpeed() && location.hasAltitude() && location.hasBearing())
+                    updateClock(location.time)
+                    if (location.hasAltitude()) {
+                        updateAltimeter(location.altitude)
+                    }
+                    if (location.hasBearing()) {
+                        updateCompass(location.bearing)
+                    }
+                    if (location.hasSpeed()) {
+                        updateSpeedMeter(location.speed)
+                    }
+                } catch (e: java.lang.Exception) {
+                    if (isDebugMode) {
+                        Log.e(packageNameString, "locate() 測位ごとに毎回行う $e")
+                    }
+                }
+
+                // たまに行う
+                if (1 == (updatedCount % 1000)) {
+                    try {
+                        if (isDebugMode) {
+                            Log.v(packageNameString, "locate() たまに行う")
+                        }
+
+                        updateSunriseSunsetLabel(location.latitude, location.longitude)
+                    } catch (e: java.lang.Exception) {
+                        if (isDebugMode) {
+                            Log.e(packageNameString, "locate() たまに行う $e")
+                        }
+                    }
+                }
+
+                // ごくまれに行う
+                if (1 == (updatedCount % 100000)) {
+                    try {
+                        if (isDebugMode) {
+                            Log.v(packageNameString, "locate() ごくまれに行う")
+                        }
+
+                        updateWeatherForecastLabel(location.latitude, location.longitude)
+                    } catch (e: java.lang.Exception) {
+                        if (isDebugMode) {
+                            Log.e(packageNameString, "locate() ごくまれに行う $e")
+                        }
+                    }
+                }
+            } catch (e: java.lang.Exception) {
                 if (isDebugMode) {
-                    Log.v(
-                        packageNameString,
-                        "onCreate() GPS $updatedCount ${location.latitude} , ${location.longitude}"
-                    )
+                    Log.e(packageNameString, "locate() for $e")
                 }
-
-                with(
-                    PreferenceManager.getDefaultSharedPreferences(application).edit()
-                ) {
-                    putString("pref_current_latitude", location.latitude.toString())
-                    putString("pref_current_longitude", location.longitude.toString())
-
-                    commit()
-                }
-
-                // 測位ボタンを有効化する
-                updateLocateButton(location)
-            }
-
-            // 測位ごとに毎回行う
-            setLocationViewVisibility(location)
-            updateClock(location.time)
-            if (location.hasAltitude()) {
-                updateAltimeter(location.altitude)
-            }
-            if (location.hasBearing()) {
-                updateCompass(location.bearing)
-            }
-            if (location.hasSpeed()) {
-                updateSpeedMeter(location.speed)
-            }
-
-            // たまに行う
-            if (1 == (updatedCount % 10)) {
-                updateSunriseSunsetLabel(location)
             }
         }
     }
@@ -269,9 +322,9 @@ class MainActivity : AppCompatActivity() {
         return false
     }
 
-    private fun setLocationViewVisibility(location: android.location.Location) {
+    private fun setLocationViewVisibility(cond: Boolean) {
         val linearLayoutLocation = findViewById<LinearLayout>(R.id.linear_layout_location)
-        if (location.hasSpeed() && location.hasAltitude() && location.hasBearing()) {
+        if (cond) {
             linearLayoutLocation.visibility = View.VISIBLE
         } else {
             linearLayoutLocation.visibility = View.INVISIBLE
@@ -300,7 +353,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     @SuppressLint("SetTextI18n")
-    private fun updateLocateButton(location: android.location.Location) {
+    private fun updateLocateButton(latitude: Double, longitude: Double) {
         // 測位に成功したらボタンのテキストを更新する
         val buttonLocate = findViewById<Button>(R.id.button_locate)
         if (buttonLocate != null) {
@@ -310,11 +363,13 @@ class MainActivity : AppCompatActivity() {
             // 逆ジオコーディング
             if (::cityDbController.isInitialized) {
                 val searched =
-                    cityDbController.searchCity(location.latitude, location.longitude)
-                Log.v(
-                    packageNameString,
-                    "reverseGeocode() searched: ${searched?.first} ${searched?.second}"
-                )
+                    cityDbController.searchCity(latitude, longitude)
+                if (isDebugMode) {
+                    Log.v(
+                        packageNameString,
+                        "reverseGeocode() searched: ${searched?.first} ${searched?.second}"
+                    )
+                }
 
                 if (!searched?.first.isNullOrEmpty() && !searched?.second.isNullOrEmpty()) {
                     buttonLocate.text =
@@ -328,17 +383,183 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateSunriseSunsetLabel(location: android.location.Location) {
-        Log.v(
-            packageNameString,
-            "updateSunriseSunsetLabel() latitude: ${location.latitude} longitude: ${location.longitude}"
-        )
+    private fun updateWeatherForecastLabel(latitude: Double, longitude: Double) {
+        if (isDebugMode) {
+            Log.v(
+                packageNameString,
+                "updateWeatherForecastLabel() latitude: ${latitude} longitude: ${longitude}"
+            )
+        }
 
-        val ssPair = sunriseSunsetCalc(location)
-        Log.v(
-            packageNameString,
-            "updateSunriseSunsetLabel() ssPair: ${ssPair.first}, ${ssPair.second}"
-        )
+        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
+        val weatherForecastBaseUrl =
+            sharedPreferences.getString(
+                "pref_weather_forecast_base_url",
+                getStr(R.string.weather_forecast_base_url_default)
+            ) ?: getStr(R.string.weather_forecast_base_url_default)
+
+        // 最も近い天気予報エリアを取得
+        var minDistance = 1_000_000_000.0
+        var nearestArea: WeatherArea? = null
+        for (area in areas) {
+            if (area.id != null && area.city != null && area.lat != null && area.lng != null) {
+                val results = floatArrayOf(0F, 0F, 0F)
+                try {
+                    android.location.Location.distanceBetween(
+                        latitude,
+                        longitude,
+                        area.lat!!,
+                        area.lng!!,
+                        results
+                    )
+                    if (results.isNotEmpty()) {
+                        val distance = results[0].toDouble()
+                        // if (isDebugMode) {
+                        //     Log.v(
+                        //         packageNameString,
+                        //         "updateWeatherReportLabel() city: ${area.city} distance: $distance"
+                        //     )
+                        // }
+                        if (distance <= minDistance) {
+                            minDistance = distance
+                            nearestArea = area
+                            // if (isDebugMode) {
+                            //     Log.v(
+                            //         packageNameString,
+                            //         "updateWeatherReportLabel() NearestArea city: ${area.city} distance: $distance minDistance: $minDistance"
+                            //     )
+                            // }
+                        }
+                    }
+                } catch (e: Exception) {
+                    if (isDebugMode) {
+                        Log.e(packageNameString, "updateWeatherForecastLabel() $e")
+                    }
+                }
+            }
+        }
+
+        // 最も近い天気予報エリアの予報内容を取得
+        if (nearestArea != null) {
+            if (weatherForecastBaseUrl != "") {
+                val url = weatherForecastBaseUrl + nearestArea.id
+
+                if (isDebugMode) {
+                    Log.v(
+                        packageNameString,
+                        "updateWeatherForecastLabel() nearestArea: $nearestArea url: $url"
+                    )
+                }
+
+                if (url != "") {
+                    val client = OkHttpClient()
+                    val request = Request.Builder().url(url).build()
+
+                    client.newCall(request).enqueue(object : Callback {
+                        override fun onFailure(call: Call, e: IOException) {
+                            if (isDebugMode) {
+                                Log.e(
+                                    packageNameString,
+                                    "updateWeatherForecastLabel() onFailure() $e"
+                                )
+                            }
+                        }
+
+                        override fun onResponse(call: Call, response: Response) {
+                            if (!response.isSuccessful) {
+                                if (isDebugMode) {
+                                    Log.e(
+                                        packageNameString,
+                                        "updateWeatherForecastLabel() !response.isSuccessful"
+                                    )
+                                }
+                                return
+                            }
+
+                            val json = response.body!!.string()
+                            if (isDebugMode) {
+                                Log.v(
+                                    packageNameString,
+                                    json
+                                )
+                            }
+
+                            val forecast = Klaxon().parse<WeatherForecast>(json)
+
+                            if (isDebugMode) {
+                                Log.v(
+                                    packageNameString,
+                                    "updateWeatherForecastLabel() forecast: $forecast"
+                                )
+                            }
+
+                            if (forecast != null) {
+                                if ((forecast.forecasts)?.isNotEmpty() == true) {
+                                    if (isDebugMode) {
+                                        Log.v(
+                                            packageNameString,
+                                            "updateWeatherForecastLabel() forecast.forecasts[0].telop: ${forecast.forecasts[0].telop}"
+                                        )
+                                        Log.v(
+                                            packageNameString,
+                                            "updateWeatherForecastLabel() forecast.forecasts[0].image.url: ${forecast.forecasts[0].image?.url}"
+                                        )
+                                    }
+
+                                    try {
+                                        lifecycleScope.launch(Dispatchers.Default) {
+                                            withContext(Dispatchers.Main) {
+                                                // アイコンを設定
+                                                if (!::imageWeather.isInitialized) {
+                                                    imageWeather =
+                                                        findViewById<ImageButton>(R.id.image_weather)
+                                                }
+                                                Picasso.get()
+                                                    .load(forecast.forecasts[0].image?.url)
+                                                    .into(imageWeather)
+
+                                                // ラベルを設定
+                                                if (!::textViewWeather.isInitialized) {
+                                                    textViewWeather =
+                                                        findViewById<TextView>(R.id.textview_weather)
+                                                }
+                                                textViewWeather.text = forecast.forecasts[0].telop
+                                            }
+                                        }
+                                    } catch (e: Exception) {
+                                        if (isDebugMode) {
+                                            Log.e(
+                                                packageNameString,
+                                                "updateWeatherForecastLabel() lifecycleScope.launch(Dispatchers.Default) $e"
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    })
+
+                    client.dispatcher.executorService.shutdown()
+                }
+            }
+        }
+    }
+
+    private fun updateSunriseSunsetLabel(latitude: Double, longitude: Double) {
+        if (isDebugMode) {
+            Log.v(
+                packageNameString,
+                "updateSunriseSunsetLabel() latitude: ${latitude} longitude: ${longitude}"
+            )
+        }
+
+        val ssPair = sunriseSunsetCalc(latitude, longitude)
+        if (isDebugMode) {
+            Log.v(
+                packageNameString,
+                "updateSunriseSunsetLabel() ssPair: ${ssPair.first}, ${ssPair.second}"
+            )
+        }
 
         val textviewSunrize = findViewById<TextView>(R.id.textview_sunrise)
         val textviewSunset = findViewById<TextView>(R.id.textview_sunset)
@@ -351,7 +572,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateCompass(bearing: Float) {
-        Log.v(packageNameString, "updateCpmpass() bearing: $bearing")
+        if (isDebugMode) {
+            Log.v(packageNameString, "updateCpmpass() bearing: $bearing")
+        }
         val textviewCompass = findViewById<TextView>(R.id.textview_compass)
         if (textviewCompass != null) {
             textviewCompass.text = getStr(R.string.compass_symbol)
@@ -394,28 +617,36 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateAltimeter(altitude: Double) {
-        Log.v(packageNameString, "updateAltimeter() altitude: $altitude")
+        if (isDebugMode) {
+            Log.v(packageNameString, "updateAltimeter() altitude: $altitude")
+        }
         val textviewAltimeter = findViewById<TextView>(R.id.textview_altimeter)
         if (textviewAltimeter != null) {
             var altitudeString = getStr(R.string.all_zero_altimeter)
             try {
                 altitudeString = "%04.0f".format(altitude) + getStr(R.string.altimeter_m)
             } catch (e: Exception) {
-                Log.v(packageNameString, "updateAltimeter() e: $e")
+                if (isDebugMode) {
+                    Log.v(packageNameString, "updateAltimeter() e: $e")
+                }
             }
             textviewAltimeter.text = altitudeString
         }
     }
 
     private fun updateSpeedMeter(speed: Float) {
-        Log.v(packageNameString, "updateSpeedMeter() speed: $speed")
+        if (isDebugMode) {
+            Log.v(packageNameString, "updateSpeedMeter() speed: $speed")
+        }
         val textviewSpeed = findViewById<TextView>(R.id.textview_speed)
         if (textviewSpeed != null) {
             var speedString = "!!!"
             try {
                 speedString = "%03.0f".format(speed * 3600 / 1000) // km/h
             } catch (e: Exception) {
-                Log.v(packageNameString, "updateSpeedMeter() e: $e")
+                if (isDebugMode) {
+                    Log.v(packageNameString, "updateSpeedMeter() e: $e")
+                }
             }
             textviewSpeed.text = speedString
 
@@ -427,8 +658,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun sunriseSunsetCalc(location: android.location.Location): Pair<String, String> {
-        val loc = com.luckycatlabs.sunrisesunset.dto.Location(location.latitude, location.longitude)
+    private fun sunriseSunsetCalc(latitude: Double, longitude: Double): Pair<String, String> {
+        val loc = com.luckycatlabs.sunrisesunset.dto.Location(latitude, longitude)
         val timeZone: TimeZone = TimeZone.getTimeZone("Asia/Tokyo")
         val calendar: Calendar = Calendar.getInstance(timeZone)
 
@@ -457,7 +688,7 @@ class MainActivity : AppCompatActivity() {
         return when (item.itemId) {
             R.id.action_settings -> {
                 startActivity(Intent(applicationContext, SettingsActivity::class.java))
-                return true;
+                return true
             }
             else -> super.onOptionsItemSelected(item)
         }

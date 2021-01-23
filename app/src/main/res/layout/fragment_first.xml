@@ -298,6 +298,41 @@
 
                     <TextView
                         android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:text="@string/weather_forecast" />
+
+                    <TextView
+                        android:id="@+id/textview_weather"
+                        android:layout_width="32dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:gravity="center_horizontal|center_vertical"
+                        android:padding="1dp"
+                        android:autoSizeMaxTextSize="32dp"
+                        android:autoSizeMinTextSize="4dp"
+                        android:autoSizePresetSizes="4dp"
+                        android:autoSizeTextType="uniform"
+                        android:text="@string/weather_forecast_empty" />
+
+                    <ImageView
+                        android:id="@+id/image_weather"
+                        android:layout_width="32dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:background="#ffffffff"
+                        android:contentDescription="@string/weather_forecast"
+                        android:scaleType="fitCenter"
+                        />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/current_time" />
 

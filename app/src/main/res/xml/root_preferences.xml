@@ -94,6 +94,20 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        app:summary="@string/weather_summary"
+        app:title="@string/weather">
+
+        <EditTextPreference
+            android:defaultValue="@string/weather_forecast_base_url_default"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            app:key="pref_weather_forecast_base_url"
+            app:title="@string/weather_forecast_base_url"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
         app:summary="@string/app_summary"
         app:title="@string/app">
 

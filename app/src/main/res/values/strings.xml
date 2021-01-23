@@ -36,6 +36,10 @@
     <string name="reloaded">Reloaded.</string>
     <string name="tweeted">Tweeted: </string>
 
+
+    <string name="weather_forecast">⛅</string>
+    <string name="weather_forecast_empty"></string>
+
     <!-- MainActivity -->
     <string name="location_request_highacc">[Locating] started. (High accuracy)</string>
     <string name="location_request_lowacc">[Locating] started. (Low accuracy)</string>
@@ -81,6 +85,12 @@
     <string name="km_h">km/h</string>
     <string name="network_state_available"> available.</string>
     <string name="network_state_no_networks">no networks.</string>
+
+    <string name="weather">Weather</string>
+    <string name="weather_summary"></string>
+    <string name="weather_forecast_base_url">Base URL</string>
+    <!-- <string name="weather_forecast_base_url_default">http://weather.livedoor.com/forecast/webservice/json/v1/</string> -->
+    <string name="weather_forecast_base_url_default">https://weather.tsukumijima.net/api/forecast/city/</string>
 
     <string name="home_area">Home area</string>
     <string name="home_area_summary">You should decide on the location of not being located.</string>
