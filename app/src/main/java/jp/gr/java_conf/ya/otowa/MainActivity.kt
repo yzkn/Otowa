@@ -22,6 +22,9 @@ import androidx.core.app.ActivityCompat
 import androidx.preference.PreferenceManager
 import com.google.android.gms.location.*
 import com.luckycatlabs.sunrisesunset.SunriseSunsetCalculator
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStreamReader
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -29,23 +32,25 @@ import java.util.*
 class MainActivity : AppCompatActivity() {
 
     // 変数
-    var isDebugMode = false
-    var packageNameString = ""
+    private var isDebugMode = false
+    private var packageNameString = ""
 
-    var isLocationUpdatesStarted = false
+    private var isLocationUpdatesStarted = false
 
-    var updatedCount = 0
+    private var updatedCount = 0
 
     companion object {
         private const val PERMISSION_REQUEST_CODE = 1000
     }
 
-    lateinit var cityDbController: AppDBController
+    private lateinit var cityDbController: AppDBController
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
 
     private lateinit var connectivityManager: ConnectivityManager
+
+    private var areas: Array<WeatherArea> = emptyArray()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,6 +68,9 @@ class MainActivity : AppCompatActivity() {
             commit()
         }
 
+        // CSVの読み取り
+        readCsv("area.csv")
+
         // 接続状況
         connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
 
@@ -76,6 +84,42 @@ class MainActivity : AppCompatActivity() {
         }
 
         initDb()
+    }
+
+    private fun readCsv(filename: String){
+        try {
+            val file = resources.assets.open(filename)
+            val fileReader = BufferedReader(InputStreamReader(file))
+            var i: Int = 0
+            fileReader.forEachLine {
+                if (it.isNotBlank()) {
+                    if (i > 0) {
+                        // ヘッダ行をスキップ
+                        val line = it.split(",").toTypedArray()
+                        fetchCSV(line)
+                    }
+                }
+                i++;
+            }
+
+        }catch (e: IOException) {
+            if (isDebugMode) {
+                Log.e(packageNameString, "readCsv() $e")
+            }
+        }
+    }
+
+    private fun fetchCSV(line: Array<String>){
+        val area = WeatherArea(
+            id = line[0],
+            city = line[1],
+            lat = line[2].toDoubleOrNull(),
+            lng = line[3].toDoubleOrNull()
+        )
+        areas += area
+        if (isDebugMode) {
+            Log.v(packageNameString, "readCsv() area: ${area}")
+        }
     }
 
     private fun locate(locationResult: LocationResult) {
