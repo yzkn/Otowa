@@ -47,21 +47,18 @@ import java.lang.Integer.min
  */
 class FirstFragment : Fragment() {
 
-    // 定数
+    private lateinit var apiTwitter: Twitter
+    private lateinit var audioManager: AudioManager
+    private lateinit var cityDbController: AppDBController
+    private lateinit var createdView: View
+    private lateinit var oauthTwitter: Twitter
+    private lateinit var sensorManager: SensorManager
+
     private val callbackUrl = "callback://"
 
-    // 変数
     private var isDebugMode = false
     private var packageNameString = ""
     private var prefLocatingError = 0.0
-
-    private lateinit var audioManager: AudioManager
-    private lateinit var sensorManager: SensorManager
-
-    private lateinit var oauthTwitter: Twitter
-    private lateinit var apiTwitter: Twitter
-    private lateinit var createdView: View
-    private lateinit var cityDbController: AppDBController
 
     // 初期化処理
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -81,6 +78,7 @@ class FirstFragment : Fragment() {
         if (isDebugMode) {
             Log.v(packageNameString, "onOptionsItemSelected() item: $item")
         }
+
         when (item.itemId) {
             R.id.action_twitter_profile_image -> {
                 if (isDebugMode) {
@@ -119,7 +117,6 @@ class FirstFragment : Fragment() {
 
     private fun initialize() {
         if (::createdView.isInitialized) {
-
             val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
             isDebugMode = sharedPreferences.getBoolean("pref_is_debug_mode", false)
 
@@ -704,12 +701,12 @@ class FirstFragment : Fragment() {
         }
     }
 
-    private fun updateTweet(tweettext: String) {
-        if (tweettext != "") {
+    private fun updateTweet(tweetText: String) {
+        if (tweetText != "") {
             viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
                 async(Dispatchers.IO) {
                     try {
-                        getTw().updateStatus(tweettext)
+                        getTw().updateStatus(tweetText)
                     } catch (e: TwitterException) {
                         withContext(Dispatchers.Main) {
                             Toast.makeText(
@@ -723,7 +720,7 @@ class FirstFragment : Fragment() {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(
                         activity,
-                        getStr(R.string.tweeted) + tweettext,
+                        getStr(R.string.tweeted) + tweetText,
                         Toast.LENGTH_LONG
                     ).show()
                 }

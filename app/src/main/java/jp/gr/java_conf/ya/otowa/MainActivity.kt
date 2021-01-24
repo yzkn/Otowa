@@ -35,29 +35,22 @@ import java.util.*
 
 
 class MainActivity : AppCompatActivity() {
-
-    // 変数
-    private var isDebugMode = false
-    private var packageNameString = ""
-
-    private var isLocationUpdatesStarted = false
-
-    private var updatedCount = 0
-
     private companion object {
         private const val PERMISSION_REQUEST_CODE = 1000
     }
 
     private lateinit var cityDbController: AppDBController
-
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private lateinit var locationCallback: LocationCallback
-
     private lateinit var connectivityManager: ConnectivityManager
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var imageWeather: ImageView
+    private lateinit var locationCallback: LocationCallback
+    private lateinit var textViewWeather: TextView
 
     private var areas: Array<WeatherArea> = emptyArray()
-    private lateinit var imageWeather: ImageView
-    private lateinit var textViewWeather: TextView
+    private var isDebugMode = false
+    private var isLocationUpdatesStarted = false
+    private var packageNameString = ""
+    private var updatedCount = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -575,6 +568,7 @@ class MainActivity : AppCompatActivity() {
         if (isDebugMode) {
             Log.v(packageNameString, "updateCpmpass() bearing: $bearing")
         }
+
         val textviewCompass = findViewById<TextView>(R.id.textview_compass)
         if (textviewCompass != null) {
             textviewCompass.text = getStr(R.string.compass_symbol)
@@ -628,6 +622,7 @@ class MainActivity : AppCompatActivity() {
         if (isDebugMode) {
             Log.v(packageNameString, "updateAltimeter() altitude: $altitude")
         }
+
         val textviewAltimeter = findViewById<TextView>(R.id.textview_altimeter)
         if (textviewAltimeter != null) {
             var altitudeString = getStr(R.string.all_zero_altimeter)
@@ -885,15 +880,6 @@ class MainActivity : AppCompatActivity() {
         if (isDebugMode) {
             Log.v(packageNameString, "checkConnection()")
         }
-
-        // val activeNetworks = connectivityManager.allNetworks.mapNotNull {
-        //     connectivityManager.getNetworkCapabilities(it)
-        // }.filter {
-        //     it.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
-        //             it.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-        // }
-        // val isConnected = activeNetworks.isNotEmpty()
-        // activeNetworks.any { it.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) }
 
         var wifiAvailable = false
         var cellulerAvailable = false
