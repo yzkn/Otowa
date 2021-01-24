@@ -44,7 +44,7 @@ class MainActivity : AppCompatActivity() {
 
     private var updatedCount = 0
 
-    companion object {
+    private companion object {
         private const val PERMISSION_REQUEST_CODE = 1000
     }
 
@@ -142,7 +142,7 @@ class MainActivity : AppCompatActivity() {
                     if (isDebugMode) {
                         Log.v(
                             packageNameString,
-                            "locate() inHomeArea(location) $updatedCount ${location.latitude} , ${location.longitude} inHomeArea"
+                            "locate() $updatedCount ${location.latitude} , ${location.longitude} inHomeArea"
                         )
                     }
 
@@ -161,7 +161,7 @@ class MainActivity : AppCompatActivity() {
                     if (isDebugMode) {
                         Log.v(
                             packageNameString,
-                            "onCreate() GPS $updatedCount ${location.latitude} , ${location.longitude}"
+                            "onCreate() $updatedCount ${location.latitude} , ${location.longitude} !inHomeArea"
                         )
                     }
 
@@ -190,7 +190,7 @@ class MainActivity : AppCompatActivity() {
                         updateAltimeter(location.altitude)
                     }
                     if (location.hasBearing()) {
-                        updateCompass(location.bearing)
+                        updateCompass(location.bearing, location.speed)
                     }
                     if (location.hasSpeed()) {
                         updateSpeedMeter(location.speed)
@@ -367,7 +367,7 @@ class MainActivity : AppCompatActivity() {
                 if (isDebugMode) {
                     Log.v(
                         packageNameString,
-                        "reverseGeocode() searched: ${searched?.first} ${searched?.second}"
+                        "updateLocateButton() searched: ${searched?.first} ${searched?.second}"
                     )
                 }
 
@@ -571,7 +571,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateCompass(bearing: Float) {
+    private fun updateCompass(bearing: Float, speed: Float) {
         if (isDebugMode) {
             Log.v(packageNameString, "updateCpmpass() bearing: $bearing")
         }
@@ -584,6 +584,14 @@ class MainActivity : AppCompatActivity() {
         val textviewCompassDirection = findViewById<TextView>(R.id.textview_compass_direction)
         if (textviewCompassDirection != null) {
             textviewCompassDirection.text = bearing2direction(bearing)
+        }
+
+        if (speed >= 10) {
+            textviewCompass.visibility = View.VISIBLE
+            textviewCompassDirection.visibility = View.VISIBLE
+        } else {
+            textviewCompass.visibility = View.INVISIBLE
+            textviewCompassDirection.visibility = View.INVISIBLE
         }
     }
 
@@ -638,7 +646,10 @@ class MainActivity : AppCompatActivity() {
         if (isDebugMode) {
             Log.v(packageNameString, "updateSpeedMeter() speed: $speed")
         }
+
         val textviewSpeed = findViewById<TextView>(R.id.textview_speed)
+        val textviewSpeedLabel = findViewById<TextView>(R.id.textview_speed_label)
+
         if (textviewSpeed != null) {
             var speedString = "!!!"
             try {
@@ -650,10 +661,20 @@ class MainActivity : AppCompatActivity() {
             }
             textviewSpeed.text = speedString
 
+            if (speed >= 10) {
+                textviewSpeed.visibility = View.VISIBLE
+                textviewSpeedLabel.visibility = View.VISIBLE
+            } else {
+                textviewSpeed.visibility = View.INVISIBLE
+                textviewSpeedLabel.visibility = View.INVISIBLE
+            }
+
             if (speed > 120) {
                 textviewSpeed.setTextColor(Color.RED)
             } else if (speed > 80) {
                 textviewSpeed.setTextColor(Color.rgb(255, 128, 0))
+            } else {
+                textviewSpeed.setTextColor(Color.BLACK)
             }
         }
     }

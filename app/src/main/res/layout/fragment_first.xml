@@ -170,6 +170,7 @@
                 app:fontFamily="@font/dseg14modern_regular" />
 
             <TextView
+                android:id="@+id/textview_speed_label"
                 android:layout_width="72dp"
                 android:layout_height="match_parent"
                 android:fontFamily="@font/dseg14modern_regular"

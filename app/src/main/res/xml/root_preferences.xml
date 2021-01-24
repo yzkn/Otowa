@@ -45,20 +45,18 @@
             app:title="@string/profile_image_url_https"
             app:useSimpleSummaryProvider="true" />
 
-        <EditTextPreference
-            android:defaultValue=""
-            android:selectAllOnFocus="false"
-            android:singleLine="true"
-            app:key="pref_current_latitude"
-            app:title="@string/current_latitude"
-            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:summary="@string/locating_summary"
+        app:title="@string/locating">
 
         <EditTextPreference
-            android:defaultValue=""
+            android:defaultValue="@string/locating_error_default"
             android:selectAllOnFocus="false"
             android:singleLine="true"
-            app:key="pref_current_longitude"
-            app:title="@string/current_longitude"
+            app:key="pref_locating_error"
+            app:title="@string/locating_error"
             app:useSimpleSummaryProvider="true" />
 
     </PreferenceCategory>
@@ -114,6 +112,22 @@
         <SwitchPreferenceCompat
             app:key="pref_is_debug_mode"
             app:title="@string/is_debug_mode" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            app:key="pref_current_latitude"
+            app:title="@string/current_latitude"
+            app:useSimpleSummaryProvider="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            app:key="pref_current_longitude"
+            app:title="@string/current_longitude"
+            app:useSimpleSummaryProvider="true" />
 
     </PreferenceCategory>
 

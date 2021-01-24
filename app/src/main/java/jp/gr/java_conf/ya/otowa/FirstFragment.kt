@@ -48,19 +48,20 @@ import java.lang.Integer.min
 class FirstFragment : Fragment() {
 
     // 定数
-    val callbackUrl = "callback://"
+    private val callbackUrl = "callback://"
 
     // 変数
-    var isDebugMode = false
-    var packageNameString = ""
+    private var isDebugMode = false
+    private var packageNameString = ""
+    private var prefLocatingError = 0.0
 
-    lateinit var audioManager: AudioManager
-    lateinit var sensorManager: SensorManager
+    private lateinit var audioManager: AudioManager
+    private lateinit var sensorManager: SensorManager
 
-    lateinit var oauthTwitter: Twitter
-    lateinit var apiTwitter: Twitter
-    lateinit var createdView: View
-    lateinit var cityDbController: AppDBController
+    private lateinit var oauthTwitter: Twitter
+    private lateinit var apiTwitter: Twitter
+    private lateinit var createdView: View
+    private lateinit var cityDbController: AppDBController
 
     // 初期化処理
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -121,6 +122,21 @@ class FirstFragment : Fragment() {
 
             val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
             isDebugMode = sharedPreferences.getBoolean("pref_is_debug_mode", false)
+
+            val prefLocatingErrorString =
+                sharedPreferences.getString("pref_locating_error", "0") ?: "0"
+            if (prefLocatingErrorString != "") {
+                try {
+                    prefLocatingError = parseDouble(prefLocatingErrorString)
+                } catch (e: Exception) {
+                    if (isDebugMode) {
+                        Log.e(
+                            packageNameString,
+                            "initialize() prefLocatingErrorString: $prefLocatingErrorString $e"
+                        )
+                    }
+                }
+            }
 
             val accessKey = sharedPreferences.getString("pref_auth_access_key", "") ?: ""
             val accessSecret = sharedPreferences.getString("pref_auth_access_secret", "") ?: ""
@@ -740,27 +756,73 @@ class FirstFragment : Fragment() {
         }
     }
 
+    private fun getLocationAddedError(latString: String, lngString: String): Pair<Double, Double> {
+        if (isDebugMode) {
+            Log.v(
+                packageNameString,
+                "getLocationAddedError() latString: $latString lngString: $lngString"
+            )
+        }
+
+        val latError =
+            prefLocatingError * (Math.random() - 0.5) // Math.random() が +0 - +1 の範囲なので () 内は -0.5 - +0.5 の範囲
+        val lngError = prefLocatingError * (Math.random() - 0.5)
+
+        // 誤差を追加
+        var currentLatitude = parseDouble(latString) + latError
+        var currentLongitude = parseDouble(lngString) + lngError
+
+        // 範囲内に収める
+        if (currentLatitude > 90.0) {
+            currentLatitude = 180.0 - currentLatitude // 91 => 89
+        } else if (currentLatitude < -90) {
+            currentLatitude = -1.0 * (currentLatitude + 180.0) // -91 => -89
+        }
+        if (currentLongitude > 180.0) {
+            currentLongitude -= 360 // 181 => -179
+        } else if (currentLongitude < -180.0) {
+            currentLongitude += 360  // -181 => 179
+        }
+
+        if (isDebugMode) {
+            Log.v(
+                packageNameString,
+                "getLocationAddedError() $latString $currentLatitude , $lngString $currentLongitude"
+            )
+        }
+
+        return currentLatitude to currentLongitude
+    }
+
     @SuppressLint("SetTextI18n")
     private fun reverseGeocode(direct: Boolean = false) {
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
         val latString = sharedPreferences.getString("pref_current_latitude", "") ?: ""
-        val lonString = sharedPreferences.getString("pref_current_longitude", "") ?: ""
+        val lngString = sharedPreferences.getString("pref_current_longitude", "") ?: ""
 
-        if (latString != "" && lonString != "") {
+        if (latString != "" && lngString != "") {
             try {
-                val currentLatitude = parseDouble(latString)
-                val currentLongitude = parseDouble(lonString)
+                var currentLatLng = getLocationAddedError(latString, lngString)
 
                 // 測位に成功している場合
-                if (currentLatitude >= -90.0 && currentLongitude >= -180.0) {
+                if (currentLatLng.first >= -90.0 && currentLatLng.second >= -180.0) {
                     // 逆ジオコーディング
                     if (::cityDbController.isInitialized) {
                         val searched =
-                            cityDbController.searchCity(currentLatitude, currentLongitude)
-                        Log.v(
-                            packageNameString,
-                            "reverseGeocode() searched: ${searched?.first} ${searched?.second}"
-                        )
+                            cityDbController.searchCity(currentLatLng.first, currentLatLng.second)
+                        val url =
+                            "https://www.google.com/maps/search/?api=1&query=${currentLatLng.first},${currentLatLng.second}"
+
+                        if (isDebugMode) {
+                            Log.v(
+                                packageNameString,
+                                "reverseGeocode() searched: ${searched?.first} ${searched?.second}"
+                            )
+                            Log.v(
+                                packageNameString,
+                                "reverseGeocode() searched: url: $url"
+                            )
+                        }
 
                         if (!searched?.first.isNullOrEmpty() && !searched?.second.isNullOrEmpty()) {
                             if (direct) {
@@ -769,7 +831,7 @@ class FirstFragment : Fragment() {
                                     it.append(searched?.first)
                                     it.append(searched?.second)
                                     it.append(" ")
-                                    it.append("https://www.google.com/maps/search/?api=1&query=${latString},${lonString}")
+                                    it.append(url)
                                     it.append(" ")
                                     it.append(createdView.findViewById<EditText>(R.id.tweet_suffix).text)
                                 }
@@ -792,7 +854,7 @@ class FirstFragment : Fragment() {
                 if (isDebugMode) {
                     Log.v(
                         packageNameString,
-                        "reverseGeocode() latString: $latString lonString: $lonString $e"
+                        "reverseGeocode() latString: $latString lngString: $lngString $e"
                     )
                 }
             }
