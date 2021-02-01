@@ -25,6 +25,7 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.*
+import androidx.core.content.ContextCompat.startForegroundService
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
@@ -252,6 +253,7 @@ class FirstFragment : Fragment() {
                 checkVolume()
                 changeScreenBrightness()
                 initializeSensors()
+                initializeLoggingButton()
 
                 iconImage.setOnLongClickListener {
                     var stringList: MutableList<String>
@@ -302,6 +304,39 @@ class FirstFragment : Fragment() {
                 }
                 linearLayoutFirst.visibility = View.VISIBLE;
                 linearLayoutTweet.visibility = View.GONE;
+            }
+        }
+    }
+
+    private fun initializeLoggingButton() {
+        val buttonLogging = createdView.findViewById<Button>(R.id.button_logging)
+        if (buttonLogging != null) {
+            if (!LoggerService.isRunning(requireContext())) {
+                // ロガーがまだ起動していなければ、ボタンのラベルを「開始」に変更
+                buttonLogging.text = getStr(R.string.logging_start)
+            } else {
+                // 起動済みならば、ボタンのラベルを「停止」に変更
+                buttonLogging.text = getStr(R.string.logging_stop)
+            }
+            buttonLogging.setOnClickListener {
+                buttonLogging.isEnabled = false
+
+                val loggerServiceIntent = Intent(requireContext(), LoggerService::class.java)
+                if (!LoggerService.isRunning(requireContext())) {
+                    // ロガーがまだ起動していなければ、ロガーを起動
+                    activity?.startForegroundService(loggerServiceIntent)
+
+                    // ボタンのラベルを「停止」に変更
+                    buttonLogging.text = getStr(R.string.logging_stop)
+                } else {
+                    // 起動済みならば、ロガーを停止
+                    activity?.stopService(loggerServiceIntent)
+
+                    // ボタンのラベルを「開始」に変更
+                    buttonLogging.text = getStr(R.string.logging_start)
+                }
+
+                buttonLogging.isEnabled = true
             }
         }
     }

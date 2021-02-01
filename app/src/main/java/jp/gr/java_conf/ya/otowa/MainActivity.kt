@@ -2,12 +2,16 @@ package jp.gr.java_conf.ya.otowa
 
 import android.Manifest.permission.*
 import android.annotation.SuppressLint
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.net.*
 import android.os.BatteryManager
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -52,6 +56,8 @@ class MainActivity : AppCompatActivity() {
     private var packageNameString = ""
     private var updatedCount = 0
 
+    private val WRITE_REQUEST_CODE = 1
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -67,6 +73,9 @@ class MainActivity : AppCompatActivity() {
             putString("pref_current_longitude", "")
             commit()
         }
+
+        // 通知
+        createNotificationChannel()
 
         // CSVの読み取り
         readCsv("area.csv")
@@ -84,6 +93,21 @@ class MainActivity : AppCompatActivity() {
         }
 
         initDb()
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                LoggerService.CHANNEL_ID,
+                getStr(R.string.logger),
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description = getStr(R.string.notification_description_logger)
+            }
+            val notificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
     }
 
     private fun readCsv(filename: String) {
@@ -445,94 +469,104 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 if (url != "") {
-                    val client = OkHttpClient()
-                    val request = Request.Builder().url(url).build()
+                    try {
+                        val client = OkHttpClient()
+                        val request = Request.Builder().url(url).build()
 
-                    client.newCall(request).enqueue(object : Callback {
-                        override fun onFailure(call: Call, e: IOException) {
-                            if (isDebugMode) {
-                                Log.e(
-                                    packageNameString,
-                                    "updateWeatherForecastLabel() onFailure() $e"
-                                )
-                            }
-                        }
-
-                        override fun onResponse(call: Call, response: Response) {
-                            if (!response.isSuccessful) {
+                        client.newCall(request).enqueue(object : Callback {
+                            override fun onFailure(call: Call, e: IOException) {
                                 if (isDebugMode) {
                                     Log.e(
                                         packageNameString,
-                                        "updateWeatherForecastLabel() !response.isSuccessful"
+                                        "updateWeatherForecastLabel() onFailure() $e"
                                     )
                                 }
-                                return
                             }
 
-                            val json = response.body!!.string()
-                            if (isDebugMode) {
-                                Log.v(
-                                    packageNameString,
-                                    json
-                                )
-                            }
-
-                            val forecast = Klaxon().parse<WeatherForecast>(json)
-
-                            if (isDebugMode) {
-                                Log.v(
-                                    packageNameString,
-                                    "updateWeatherForecastLabel() forecast: $forecast"
-                                )
-                            }
-
-                            if (forecast != null) {
-                                if ((forecast.forecasts)?.isNotEmpty() == true) {
+                            override fun onResponse(call: Call, response: Response) {
+                                if (!response.isSuccessful) {
                                     if (isDebugMode) {
-                                        Log.v(
+                                        Log.e(
                                             packageNameString,
-                                            "updateWeatherForecastLabel() forecast.forecasts[0].telop: ${forecast.forecasts[0].telop}"
-                                        )
-                                        Log.v(
-                                            packageNameString,
-                                            "updateWeatherForecastLabel() forecast.forecasts[0].image.url: ${forecast.forecasts[0].image?.url}"
+                                            "updateWeatherForecastLabel() !response.isSuccessful"
                                         )
                                     }
+                                    return
+                                }
 
-                                    try {
-                                        lifecycleScope.launch(Dispatchers.Default) {
-                                            withContext(Dispatchers.Main) {
-                                                // アイコンを設定
-                                                if (!::imageWeather.isInitialized) {
-                                                    imageWeather =
-                                                        findViewById<ImageButton>(R.id.image_weather)
-                                                }
-                                                Picasso.get()
-                                                    .load(forecast.forecasts[0].image?.url)
-                                                    .into(imageWeather)
+                                val json = response.body!!.string()
+                                if (isDebugMode) {
+                                    Log.v(
+                                        packageNameString,
+                                        json
+                                    )
+                                }
 
-                                                // ラベルを設定
-                                                if (!::textViewWeather.isInitialized) {
-                                                    textViewWeather =
-                                                        findViewById<TextView>(R.id.textview_weather)
-                                                }
-                                                textViewWeather.text = forecast.forecasts[0].telop
-                                            }
-                                        }
-                                    } catch (e: Exception) {
+                                val forecast = Klaxon().parse<WeatherForecast>(json)
+
+                                if (isDebugMode) {
+                                    Log.v(
+                                        packageNameString,
+                                        "updateWeatherForecastLabel() forecast: $forecast"
+                                    )
+                                }
+
+                                if (forecast != null) {
+                                    if ((forecast.forecasts)?.isNotEmpty() == true) {
                                         if (isDebugMode) {
-                                            Log.e(
+                                            Log.v(
                                                 packageNameString,
-                                                "updateWeatherForecastLabel() lifecycleScope.launch(Dispatchers.Default) $e"
+                                                "updateWeatherForecastLabel() forecast.forecasts[0].telop: ${forecast.forecasts[0].telop}"
                                             )
+                                            Log.v(
+                                                packageNameString,
+                                                "updateWeatherForecastLabel() forecast.forecasts[0].image.url: ${forecast.forecasts[0].image?.url}"
+                                            )
+                                        }
+
+                                        try {
+                                            lifecycleScope.launch(Dispatchers.Default) {
+                                                withContext(Dispatchers.Main) {
+                                                    // アイコンを設定
+                                                    if (!::imageWeather.isInitialized) {
+                                                        imageWeather =
+                                                            findViewById<ImageButton>(R.id.image_weather)
+                                                    }
+                                                    Picasso.get()
+                                                        .load(forecast.forecasts[0].image?.url)
+                                                        .into(imageWeather)
+
+                                                    // ラベルを設定
+                                                    if (!::textViewWeather.isInitialized) {
+                                                        textViewWeather =
+                                                            findViewById<TextView>(R.id.textview_weather)
+                                                    }
+                                                    textViewWeather.text =
+                                                        forecast.forecasts[0].telop
+                                                }
+                                            }
+                                        } catch (e: Exception) {
+                                            if (isDebugMode) {
+                                                Log.e(
+                                                    packageNameString,
+                                                    "updateWeatherForecastLabel() lifecycleScope.launch(Dispatchers.Default) $e"
+                                                )
+                                            }
                                         }
                                     }
                                 }
                             }
-                        }
-                    })
+                        })
 
-                    client.dispatcher.executorService.shutdown()
+                        client.dispatcher.executorService.shutdown()
+                    } catch (e: Exception) {
+                        if (isDebugMode) {
+                            Log.e(
+                                packageNameString,
+                                "updateWeatherForecastLabel() (url != \"\") $e"
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -691,6 +725,7 @@ class MainActivity : AppCompatActivity() {
         cityDbController = AppDBController(this)
     }
 
+
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.menu_main, menu)
@@ -704,6 +739,14 @@ class MainActivity : AppCompatActivity() {
         return when (item.itemId) {
             R.id.action_settings -> {
                 startActivity(Intent(applicationContext, SettingsActivity::class.java))
+                return true
+            }
+            R.id.action_kml_export -> {
+                exportKml()
+                return true
+            }
+            R.id.action_kml_clean -> {
+                cleanKml()
                 return true
             }
             else -> super.onOptionsItemSelected(item)
@@ -749,7 +792,19 @@ class MainActivity : AppCompatActivity() {
                     PackageManager.PERMISSION_GRANTED
 
             if (backgroundLocationPermissionApproved) {
-                // Granted
+                val externalStoragePermissionApproved = ActivityCompat
+                    .checkSelfPermission(this, WRITE_EXTERNAL_STORAGE) ==
+                        PackageManager.PERMISSION_GRANTED
+
+                if (externalStoragePermissionApproved) {
+                    // Granted
+                } else {
+                    ActivityCompat.requestPermissions(
+                        this,
+                        arrayOf(WRITE_EXTERNAL_STORAGE),
+                        PERMISSION_REQUEST_CODE
+                    )
+                }
             } else {
                 ActivityCompat.requestPermissions(
                     this,
@@ -930,6 +985,109 @@ class MainActivity : AppCompatActivity() {
             getString(resId)
         } catch (e: Exception) {
             ""
+        }
+    }
+
+    private fun cleanKml() {
+        if (isDebugMode) {
+            Log.v(packageNameString, "cleanKml()")
+        }
+
+        val ioUtil = IoUtil(this)
+        for (f in ioUtil.listExternalPrivateTextFiles()) {
+            if (isDebugMode) {
+                Log.v(packageNameString, "cleanKml() f:$f")
+            }
+            try {
+                f.delete()
+            } catch (e: Exception) {
+                if (isDebugMode) {
+                    Log.e(
+                        packageNameString,
+                        "cleanKml() $e"
+                    )
+                }
+            }
+        }
+
+        Toast.makeText(
+            this,
+            getStr(R.string.action_kml_cleaned),
+            Toast.LENGTH_LONG
+        ).show()
+    }
+
+    private fun exportKml() {
+        if (isDebugMode) {
+            Log.v(packageNameString, "exportKml()")
+        }
+
+        val ioUtil = IoUtil(this)
+
+        val sbFileName = StringBuilder()
+        val sbFileContent = StringBuilder()
+
+        val sep = System.getProperty("line.separator")
+
+        sbFileContent.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>").append(sep)
+        sbFileContent.append("<kml xmlns=\"http://www.opengis.net/kml/2.2\">").append(sep)
+        sbFileContent.append("<Document>").append(sep)
+        sbFileContent.append("<name>MyRoutes</name>").append(sep)
+        sbFileContent.append("<description>My route exported from app</description>").append(sep)
+        sbFileContent.append("<Placemark>").append(sep)
+        sbFileContent.append("<LineString>").append(sep)
+        sbFileContent.append("<coordinates>").append(sep)
+
+        for (f in ioUtil.listExternalPrivateTextFiles()) {
+            if (isDebugMode) {
+                Log.v(packageNameString, "exportKml() f:$f")
+            }
+            sbFileName.append(f.nameWithoutExtension).append("_")
+            val cont = ioUtil.readExternalPrivateTextFile(f.name) ?: ""
+            sbFileContent.append(cont).append(System.getProperty("line.separator"))
+            if (isDebugMode) {
+                Log.v(packageNameString, "exportKml() f.name:${f.name} cont:$cont")
+            }
+        }
+
+        sbFileContent.append("</coordinates>").append(sep)
+        sbFileContent.append("</LineString>").append(sep)
+        sbFileContent.append("</Placemark>").append(sep)
+        sbFileContent.append("</Document>").append(sep)
+        sbFileContent.append("</kml>")
+
+        val concatFilename = sbFileName.toString()
+        saveExternalPublicTextFile(concatFilename.substring(0, concatFilename.length - 1))
+        safContent = sbFileContent.toString()
+    }
+
+    // Storage Access Framework
+    private fun saveExternalPublicTextFile(filename: String) {
+        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
+        intent.addCategory(Intent.CATEGORY_OPENABLE)
+        intent.type = "text/plain"
+        intent.putExtra(Intent.EXTRA_TITLE, filename)
+        startActivityForResult(intent, WRITE_REQUEST_CODE)
+    }
+
+    private var safContent = ""
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (isDebugMode) {
+            Log.v(
+                packageNameString,
+                "onActivityResult() data:$data"
+            )
+            Log.v(packageNameString, "onActivityResult() safContent:$safContent")
+        }
+
+        if (requestCode == WRITE_REQUEST_CODE && resultCode == RESULT_OK) {
+            data?.data?.let { uri ->
+                contentResolver.openOutputStream(uri).use { outputStream ->
+                    outputStream?.write(safContent.toByteArray())
+                }
+            }
         }
     }
 }

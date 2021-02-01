@@ -140,6 +140,15 @@
                 android:text="@string/button_volume_max"
                 app:backgroundTint="#ff0099cc"
                 tools:ignore="ButtonStyle" />
+
+            <Button
+                android:id="@+id/button_logging"
+                android:layout_width="96dp"
+                android:layout_height="match_parent"
+                android:text="@string/logging_start"
+                android:textSize="12sp"
+                app:backgroundTint="#0066ff"
+                tools:ignore="ButtonStyle" />
         </LinearLayout>
     </LinearLayout>
 
@@ -297,14 +306,19 @@
                     android:layout_height="32dp"
                     android:orientation="horizontal">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:text="@string/weather_forecast" />
+                    <ImageView
+                        android:id="@+id/image_weather"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_weight="1"
+                        android:background="#ffffffff"
+                        android:contentDescription="@string/weather_forecast"
+                        android:scaleType="fitCenter"
+                        />
 
                     <TextView
                         android:id="@+id/textview_weather"
-                        android:layout_width="32dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="match_parent"
                         android:layout_weight="1"
                         android:gravity="center_horizontal|center_vertical"
@@ -314,16 +328,6 @@
                         android:autoSizePresetSizes="4dp"
                         android:autoSizeTextType="uniform"
                         android:text="@string/weather_forecast_empty" />
-
-                    <ImageView
-                        android:id="@+id/image_weather"
-                        android:layout_width="32dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:background="#ffffffff"
-                        android:contentDescription="@string/weather_forecast"
-                        android:scaleType="fitCenter"
-                        />
 
                 </LinearLayout>
 
