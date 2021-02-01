@@ -12,7 +12,9 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.media.AudioAttributes
 import android.media.AudioManager
+import android.media.SoundPool
 import android.net.Uri
 import android.os.BatteryManager
 import android.os.BatteryManager.*
@@ -25,7 +27,6 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.*
-import androidx.core.content.ContextCompat.startForegroundService
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
@@ -54,10 +55,14 @@ class FirstFragment : Fragment() {
     private lateinit var createdView: View
     private lateinit var oauthTwitter: Twitter
     private lateinit var sensorManager: SensorManager
+    private lateinit var soundPool: SoundPool
 
     private val callbackUrl = "callback://"
 
     private var isDebugMode = false
+    private var loadedSoundDeleted = -1
+    private var loadedSoundNotify = -1
+    private var loadedSoundTweeted = -1
     private var packageNameString = ""
     private var prefLocatingError = 0.0
 
@@ -110,9 +115,46 @@ class FirstFragment : Fragment() {
         initDb()
     }
 
+    override fun onDestroy() {
+        soundPool?.release()
+
+        super.onDestroy()
+    }
+
     private fun initDb() {
         if (::createdView.isInitialized) {
             cityDbController = AppDBController(createdView.context)
+        }
+    }
+
+    private fun initSound() {
+        val audioAttributes = AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build()
+
+        soundPool = SoundPool.Builder()
+            .setAudioAttributes(audioAttributes)
+            .setMaxStreams(1)
+            .build()
+        soundPool.setOnLoadCompleteListener { soundPool, sampleId, status ->
+            if (isDebugMode) {
+                Log.v(
+                    packageNameString,
+                    "initSound() soundPool.setOnLoadCompleteListener soundPool: $soundPool sampleId: $sampleId status: $status"
+                )
+            }
+        }
+
+        // 音楽の読み込み
+        loadedSoundDeleted = soundPool.load(context, R.raw.deleted, 1)
+        loadedSoundNotify = soundPool.load(context, R.raw.notify, 1)
+        loadedSoundTweeted = soundPool.load(context, R.raw.tweeted, 1)
+    }
+
+    private fun playSound(soundId: Int) {
+        if (soundId != -1) {
+            soundPool.play(soundId, 1.0f, 1.0f, 0, 0, 1.0f)
         }
     }
 
@@ -120,6 +162,8 @@ class FirstFragment : Fragment() {
         if (::createdView.isInitialized) {
             val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
             isDebugMode = sharedPreferences.getBoolean("pref_is_debug_mode", false)
+
+            initSound()
 
             val prefLocatingErrorString =
                 sharedPreferences.getString("pref_locating_error", "0") ?: "0"
@@ -212,9 +256,13 @@ class FirstFragment : Fragment() {
                 }
                 buttonLocate.setOnClickListener {
                     reverseGeocode()
+
+                    playSound(loadedSoundNotify)
                 }
                 buttonLocate.setOnLongClickListener {
                     reverseGeocode(true)
+
+                    playSound(loadedSoundNotify)
                     true
                 }
                 iconImage.setOnClickListener {
@@ -230,6 +278,36 @@ class FirstFragment : Fragment() {
 
                     createdView.findViewById<ImageButton>(R.id.icon_image).isEnabled = true
                     editTextList[1].text.clear()
+
+                    playSound(loadedSoundTweeted)
+                }
+                iconImage.setOnLongClickListener {
+                    var stringList: MutableList<String>
+                    viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+                        val tweetList = withContext(Dispatchers.IO) { getTw().userTimeline }
+                        stringList = mutableListOf<String>()
+                        for (tweet in tweetList) {
+                            stringList.add(tweet.text)
+                        }
+
+                        withContext(Dispatchers.Main) {
+                            AlertDialog.Builder(activity)
+                                .setTitle(getStr(R.string.tweet_delete_dialog))
+                                .setItems(stringList.toTypedArray()) { _, which ->
+                                    AlertDialog.Builder(activity)
+                                        .setTitle(getStr(R.string.tweet_delete_dialog))
+                                        .setMessage(stringList[which])
+                                        .setPositiveButton(getStr(R.string.delete_tweet)) { _, _ ->
+                                            deleteTweet(tweetList[which].id)
+                                            playSound(loadedSoundDeleted)
+                                        }
+                                        .show()
+                                }
+                                .show()
+                            playSound(loadedSoundNotify)
+                        }
+                    }
+                    true
                 }
 
                 buttonVolumeDec.setOnClickListener {
@@ -254,33 +332,6 @@ class FirstFragment : Fragment() {
                 changeScreenBrightness()
                 initializeSensors()
                 initializeLoggingButton()
-
-                iconImage.setOnLongClickListener {
-                    var stringList: MutableList<String>
-                    viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-                        val tweetList = withContext(Dispatchers.IO) { getTw().userTimeline }
-                        stringList = mutableListOf<String>()
-                        for (tweet in tweetList) {
-                            stringList.add(tweet.text)
-                        }
-
-                        withContext(Dispatchers.Main) {
-                            AlertDialog.Builder(activity)
-                                .setTitle(getStr(R.string.tweet_delete_dialog))
-                                .setItems(stringList.toTypedArray()) { _, which ->
-                                    AlertDialog.Builder(activity)
-                                        .setTitle(getStr(R.string.tweet_delete_dialog))
-                                        .setMessage(stringList[which])
-                                        .setPositiveButton(getStr(R.string.delete_tweet)) { _, _ ->
-                                            deleteTweet(tweetList[which].id)
-                                        }
-                                        .show()
-                                }
-                                .show()
-                        }
-                    }
-                    true
-                }
 
                 val profileImageUrlHttps =
                     sharedPreferences.getString("pref_profile_image_url_https", "")
