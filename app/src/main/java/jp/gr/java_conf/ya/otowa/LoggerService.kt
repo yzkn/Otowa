@@ -1,6 +1,7 @@
 package jp.gr.java_conf.ya.otowa
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.app.Service
 import android.content.BroadcastReceiver
@@ -15,8 +16,6 @@ import androidx.core.app.NotificationCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.preference.PreferenceManager
 import com.google.android.gms.location.*
-import java.text.SimpleDateFormat
-import java.util.*
 
 
 class LoggerService : Service() {
@@ -28,7 +27,8 @@ class LoggerService : Service() {
         const val ACTION_IS_RUNNING = "jp.gr.java_conf.ya.otowa.LoggerService_is_running"
         fun createIntent(context: Context) = Intent(context, LoggerService::class.java)
         fun isRunning(context: Context): Boolean {
-            return LocalBroadcastManager.getInstance(context).sendBroadcast(Intent(ACTION_IS_RUNNING))
+            return LocalBroadcastManager.getInstance(context)
+                .sendBroadcast(Intent(ACTION_IS_RUNNING))
         }
     }
 
@@ -66,44 +66,51 @@ class LoggerService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // val sdfFyyyyMMddHHmmss = SimpleDateFormat("yyyy/MM/dd HH:mm:ss", Locale.JAPAN)
-
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult?) {
                 locationResult ?: return
-                for (location in locationResult.locations){
-                    if (isDebugMode) {
-                        Log.d(
-                            packageNameString,
-                            "onStartCommand() onLocationResult() location ${location.latitude} , ${location.longitude}"
-                        )
+                for (location in locationResult.locations) {
+                    try {
+                        if (inHomeArea(location)) {
+                            if (isDebugMode) {
+                                Log.d(
+                                    packageNameString,
+                                    "onStartCommand() onLocationResult() inHomeArea(location) location ${location.latitude} , ${location.longitude}"
+                                )
+                            }
+                        }else{
+                            if (isDebugMode) {
+                                Log.d(
+                                    packageNameString,
+                                    "onStartCommand() onLocationResult() !inHomeArea(location) location ${location.latitude} , ${location.longitude}"
+                                )
+                            }
+
+                            val strBuf = StringBuilder()
+
+                            // val sdfFyyyyMMddHHmmss = SimpleDateFormat("yyyy/MM/dd HH:mm:ss", Locale.JAPAN)
+                            // strBuf.append("${location.latitude}")
+                            // strBuf.append("${location.longitude}")
+                            // strBuf.append("${location.accuracy}")
+                            // strBuf.append("${location.altitude}")
+                            // strBuf.append("${location.speed}")
+                            // strBuf.append("${location.bearing}")
+                            // strBuf.append(sdfFyyyyMMddHHmmss.format(location.time))
+
+                            strBuf.append("${location.longitude}")
+                            strBuf.append(",")
+                            strBuf.append("${location.latitude}")
+                            strBuf.append(",")
+                            strBuf.append("${location.altitude}")
+
+                            strBuf.append(System.getProperty("line.separator"))
+                            ioUtil.saveExternalPrivateTextFile(strBuf.toString(), true)
+                        }
+                    } catch (e: Exception) {
+                        if (isDebugMode) {
+                            Log.e(packageNameString, "onStartCommand() onLocationResult() $e")
+                        }
                     }
-
-                    val strBuf = StringBuilder()
-
-                    // strBuf.append("${location.latitude}")
-                    // strBuf.append(",")
-                    // strBuf.append("${location.longitude}")
-                    // strBuf.append(",")
-                    // strBuf.append("${location.accuracy}")
-                    // strBuf.append(",")
-                    // strBuf.append("${location.altitude}")
-                    // strBuf.append(",")
-                    // strBuf.append("${location.speed}")
-                    // strBuf.append(",")
-                    // strBuf.append("${location.bearing}")
-                    // strBuf.append(",")
-                    // strBuf.append(sdfFyyyyMMddHHmmss.format(location.time))
-
-                    strBuf.append("${location.longitude}")
-                    strBuf.append(",")
-                    strBuf.append("${location.latitude}")
-                    strBuf.append(",")
-                    strBuf.append("${location.altitude}")
-
-                    strBuf.append(System.getProperty("line.separator"))
-                    ioUtil.saveExternalPrivateTextFile(strBuf.toString(), true)
-                    //
                 }
             }
         }
@@ -148,6 +155,7 @@ class LoggerService : Service() {
         super.onDestroy()
     }
 
+    @SuppressLint("MissingPermission")
     private fun startLocationUpdates() {
         val locationRequest = createLocationRequest() ?: return
         if (ActivityCompat.checkSelfPermission(
@@ -164,7 +172,8 @@ class LoggerService : Service() {
             fusedLocationClient.requestLocationUpdates(
                 locationRequest,
                 locationCallback,
-                null)
+                null
+            )
         }
     }
 
@@ -178,5 +187,90 @@ class LoggerService : Service() {
             fastestInterval = 1000
             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         }
+    }
+
+
+    private fun inHomeArea(location: android.location.Location): Boolean {
+        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
+        val homeAreaLatitudeString =
+            sharedPreferences.getString("pref_home_area_latitude", "") ?: ""
+        val homeAreaLongitudeString =
+            sharedPreferences.getString("pref_home_area_longitude", "") ?: ""
+        val homeAreaRadiusString = sharedPreferences.getString("pref_home_area_radius", "") ?: ""
+
+        if (homeAreaLatitudeString != "" && homeAreaLongitudeString != "" && homeAreaRadiusString != "") {
+            if (isDebugMode) {
+                Log.v(
+                    packageNameString, "LoggerService inHomeArea() !empty:"
+                            + " homeAreaLatitudeString: $homeAreaLatitudeString"
+                            + " homeAreaLongitudeString: $homeAreaLongitudeString"
+                            + " homeAreaRadiusString: $homeAreaRadiusString"
+                )
+            }
+
+            try {
+                val homeAreaLatitude = java.lang.Double.parseDouble(homeAreaLatitudeString)
+                val homeAreaLongitude = java.lang.Double.parseDouble(homeAreaLongitudeString)
+                val homeAreaRadius = java.lang.Double.parseDouble(homeAreaRadiusString)
+                if (isDebugMode) {
+                    Log.v(
+                        packageNameString, "LoggerService inHomeArea() parsed:"
+                                + " homeAreaLatitude: $homeAreaLatitude"
+                                + " homeAreaLongitude: $homeAreaLongitude"
+                                + " homeAreaRadius: $homeAreaRadius"
+                    )
+                }
+
+                val results = floatArrayOf(0F, 0F, 0F)
+                try {
+                    android.location.Location.distanceBetween(
+                        location.latitude,
+                        location.longitude,
+                        homeAreaLatitude,
+                        homeAreaLongitude,
+                        results
+                    )
+                    if (results.isNotEmpty()) {
+                        val distance = results[0].toDouble()
+                        if (distance < homeAreaRadius) {
+                            if (isDebugMode) {
+                                Log.v(
+                                    packageNameString,
+                                    "LoggerService inHomeArea() home-area:"
+                                            + " distance: $distance"
+                                            + " homeAreaRadius: $homeAreaRadius"
+                                )
+                            }
+                            return true
+                        }
+                    }
+                } catch (e: Exception) {
+                    if (isDebugMode) {
+                        Log.e(packageNameString, "LoggerService inHomeArea() $e")
+                    }
+                }
+            } catch (e: Exception) {
+                if (isDebugMode) {
+                    Log.e(
+                        packageNameString, "LoggerService inHomeArea()"
+                                + " homeAreaLatitudeString: $homeAreaLatitudeString"
+                                + " homeAreaLongitudeString: $homeAreaLongitudeString"
+                                + " homeAreaRadiusString: $homeAreaRadiusString $e"
+                    )
+                }
+            }
+        } else {
+            // 未設定の場合
+            if (isDebugMode) {
+                Log.v(
+                    packageNameString, "LoggerService inHomeArea() empty"
+                            + " homeAreaLatitudeString: $homeAreaLatitudeString"
+                            + " homeAreaLongitudeString: $homeAreaLongitudeString"
+                            + " homeAreaRadiusString: $homeAreaRadiusString"
+                )
+            }
+        }
+
+        return false
     }
 }

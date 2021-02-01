@@ -1022,6 +1022,8 @@ class MainActivity : AppCompatActivity() {
             Log.v(packageNameString, "exportKml()")
         }
 
+        safContent = ""
+
         val ioUtil = IoUtil(this)
 
         val sbFileName = StringBuilder()
