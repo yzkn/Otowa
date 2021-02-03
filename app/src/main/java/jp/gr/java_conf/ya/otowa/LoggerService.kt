@@ -65,12 +65,16 @@ class LoggerService : Service() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
     }
 
+    private var preLine = ""
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult?) {
                 locationResult ?: return
+
                 for (location in locationResult.locations) {
                     try {
+                        val strBuf = StringBuilder()
+
                         if (inHomeArea(location)) {
                             if (isDebugMode) {
                                 Log.d(
@@ -78,15 +82,18 @@ class LoggerService : Service() {
                                     "onStartCommand() onLocationResult() inHomeArea(location) location ${location.latitude} , ${location.longitude}"
                                 )
                             }
-                        }else{
+
+                            if ("" != preLine && System.getProperty("line.separator") != preLine) {
+                                strBuf.append(System.getProperty("line.separator"))
+                                // 前の行も空行なら追加しない
+                            }
+                        } else {
                             if (isDebugMode) {
                                 Log.d(
                                     packageNameString,
                                     "onStartCommand() onLocationResult() !inHomeArea(location) location ${location.latitude} , ${location.longitude}"
                                 )
                             }
-
-                            val strBuf = StringBuilder()
 
                             // val sdfFyyyyMMddHHmmss = SimpleDateFormat("yyyy/MM/dd HH:mm:ss", Locale.JAPAN)
                             // strBuf.append("${location.latitude}")
@@ -102,10 +109,11 @@ class LoggerService : Service() {
                             strBuf.append("${location.latitude}")
                             strBuf.append(",")
                             strBuf.append("${location.altitude}")
-
                             strBuf.append(System.getProperty("line.separator"))
-                            ioUtil.saveExternalPrivateTextFile(strBuf.toString(), true)
                         }
+
+                        ioUtil.saveExternalPrivateTextFile(strBuf.toString(), true)
+                        preLine = strBuf.toString()
                     } catch (e: Exception) {
                         if (isDebugMode) {
                             Log.e(packageNameString, "onStartCommand() onLocationResult() $e")
