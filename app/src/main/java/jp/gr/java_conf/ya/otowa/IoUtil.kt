@@ -130,7 +130,7 @@ class IoUtil(context: Context) {
         val date = Date()
         val sdfFyyyyMMddHHmmss = SimpleDateFormat("yyyyMMddHHmmss", Locale.JAPAN)
         val dateString = sdfFyyyyMMddHHmmss.format(date)
-        val filename = "otowa_$dateString.csv"
+        val filename = "Route$dateString.csv"
 
         saveFile = File(baseDirectory, filename)
         if (isDebugMode) {

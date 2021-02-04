@@ -1034,32 +1034,45 @@ class MainActivity : AppCompatActivity() {
         sbFileContent.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>").append(sep)
         sbFileContent.append("<kml xmlns=\"http://www.opengis.net/kml/2.2\">").append(sep)
         sbFileContent.append("<Document>").append(sep)
+        sbFileContent.append("<Folder>").append(sep)
         sbFileContent.append("<name>MyRoutes</name>").append(sep)
-        sbFileContent.append("<description>My route exported from app</description>").append(sep)
-        sbFileContent.append("<Placemark>").append(sep)
-        sbFileContent.append("<LineString>").append(sep)
-        sbFileContent.append("<coordinates>").append(sep)
+        sbFileContent.append("<description>My route exported from Otowa</description>").append(sep)
 
         for (f in ioUtil.listExternalPrivateTextFiles()) {
             if (isDebugMode) {
                 Log.v(packageNameString, "exportKml() f:$f")
             }
             sbFileName.append(f.nameWithoutExtension).append("_")
+
+            //
+            sbFileContent.append("<Folder>").append(sep)
+            sbFileContent.append("<name>${f.nameWithoutExtension}</name>").append(sep)
+            sbFileContent.append("<Placemark>").append(sep)
+            sbFileContent.append("<name>Path</name>").append(sep)
+            sbFileContent.append("<LineString>").append(sep)
+            sbFileContent.append("<coordinates>").append(sep)
+            //
+
             val cont = ioUtil.readExternalPrivateTextFile(f.name) ?: ""
             sbFileContent.append(cont).append(System.getProperty("line.separator"))
             if (isDebugMode) {
                 Log.v(packageNameString, "exportKml() f.name:${f.name} cont:$cont")
             }
+
+            //
+            sbFileContent.append("</coordinates>").append(sep)
+            sbFileContent.append("</LineString>").append(sep)
+            sbFileContent.append("</Placemark>").append(sep)
+            sbFileContent.append("</Folder>").append(sep)
+            //
         }
 
-        sbFileContent.append("</coordinates>").append(sep)
-        sbFileContent.append("</LineString>").append(sep)
-        sbFileContent.append("</Placemark>").append(sep)
+        sbFileContent.append("</Folder>").append(sep)
         sbFileContent.append("</Document>").append(sep)
         sbFileContent.append("</kml>")
 
         val concatFilename = sbFileName.toString()
-        saveExternalPublicTextFile(concatFilename.substring(0, concatFilename.length - 1))
+        saveExternalPublicTextFile(concatFilename.substring(0, concatFilename.length - 1) + ".kml")
         safContent = sbFileContent.toString()
     }
 
