@@ -38,7 +38,6 @@
     <string name="deleted">Deleted.</string>
     <string name="first_fragment_label">First Fragment</string>
     <string name="hello_first_fragment">Hello first fragment</string>
-    <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
     <string name="home_area">Home area</string>
     <string name="home_area_latitude">Latitude of center point</string>
     <string name="home_area_longitude">Longitude of center point</string>
