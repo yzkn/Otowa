@@ -226,6 +226,8 @@ class MainActivity : AppCompatActivity() {
                         }
 
                         updateSunriseSunsetLabel(location.latitude, location.longitude)
+
+                        updateLoggingButton()
                     } catch (e: java.lang.Exception) {
                         if (isDebugMode) {
                             Log.e(packageNameString, "locate() たまに行う $e")
@@ -725,6 +727,18 @@ class MainActivity : AppCompatActivity() {
         cityDbController = AppDBController(this)
     }
 
+    private fun updateLoggingButton() {
+        val buttonLogging = findViewById<Button>(R.id.button_logging)
+        if (buttonLogging != null) {
+            if (!LoggerService.isRunning(this)) {
+                // ロガーがまだ起動していなければ、ボタンのラベルを「開始」に変更
+                buttonLogging.text = getStr(R.string.logging_start)
+            } else {
+                // 起動済みならば、ボタンのラベルを「停止」に変更
+                buttonLogging.text = getStr(R.string.logging_stop)
+            }
+        }
+    }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.

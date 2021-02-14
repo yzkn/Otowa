@@ -12,16 +12,10 @@ import java.util.*
 
 class IoUtil(context: Context) {
     private var baseDirectory: File?
-    private val saveFile: File
     private var isDebugMode = false
     private var packageNameString = ""
 
     private var stringBuffer: StringBuffer? = null
-
-    fun clearExternalPrivateTextFile() {
-        saveExternalPrivateTextFile("", false)
-        stringBuffer!!.setLength(0)
-    }
 
     fun saveExternalPrivateTextFile(logString: String?, mode: Boolean) {
         if (isDebugMode) {
@@ -29,6 +23,16 @@ class IoUtil(context: Context) {
         }
         if (checkIfExternalStorageIsWritable()) {
             try {
+                // 現在時刻から時単位のファイル名を作成
+                val date = Date()
+                val sdfFyyyyMMddHH = SimpleDateFormat("yyyyMMddHH", Locale.JAPAN)
+                val dateString = sdfFyyyyMMddHH.format(date)
+                val filename = "Route$dateString.csv"
+                val saveFile = File(baseDirectory, filename)
+                if (isDebugMode) {
+                    Log.v(packageNameString, "init() filename:$filename")
+                }
+
                 FileOutputStream(saveFile, mode).use { fileOutputStream ->
                     OutputStreamWriter(
                         fileOutputStream,
@@ -124,17 +128,6 @@ class IoUtil(context: Context) {
         baseDirectory = context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)
         if (isDebugMode) {
             Log.v(packageNameString, "init() baseDirectory:$baseDirectory")
-        }
-
-        // 起動時の現在時刻
-        val date = Date()
-        val sdfFyyyyMMddHHmmss = SimpleDateFormat("yyyyMMddHHmmss", Locale.JAPAN)
-        val dateString = sdfFyyyyMMddHHmmss.format(date)
-        val filename = "Route$dateString.csv"
-
-        saveFile = File(baseDirectory, filename)
-        if (isDebugMode) {
-            Log.v(packageNameString, "init() filename:$filename")
         }
     }
 }
