@@ -34,6 +34,7 @@ import okhttp3.*
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
+import java.lang.Double.parseDouble
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -1045,47 +1046,150 @@ class MainActivity : AppCompatActivity() {
 
         val sep = System.getProperty("line.separator")
 
-        sbFileContent.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>").append(sep)
-        sbFileContent.append("<kml xmlns=\"http://www.opengis.net/kml/2.2\">").append(sep)
-        sbFileContent.append("<Document>").append(sep)
-        sbFileContent.append("<Folder>").append(sep)
-        sbFileContent.append("<name>MyRoutes</name>").append(sep)
-        sbFileContent.append("<description>My route exported from Otowa</description>").append(sep)
+        sbFileContent.append(
+            KmlUtil.KmlHeader.trimIndent()
+        ).append(sep)
 
+        var routeNumber = 0
         for (f in ioUtil.listExternalPrivateTextFiles()) {
+            routeNumber++
+
             if (isDebugMode) {
                 Log.v(packageNameString, "exportKml() f:$f")
             }
-            sbFileName.append(f.nameWithoutExtension).append("_")
 
-            //
-            sbFileContent.append("<Folder>").append(sep)
-            sbFileContent.append("<name>${f.nameWithoutExtension}</name>").append(sep)
-            sbFileContent.append("<Placemark>").append(sep)
-            sbFileContent.append("<name>Path</name>").append(sep)
-            sbFileContent.append("<LineString>").append(sep)
-            sbFileContent.append("<coordinates>").append(sep)
-            //
+            // 各ファイル各行の処理
+            var pointsCoordinatesString = ""
+            var pathsCoordinatesString = ""
+            val rows = ioUtil.readExternalPrivateTextFile(f.name)
 
-            val cont = ioUtil.readExternalPrivateTextFile(f.name) ?: ""
-            sbFileContent.append(cont).append(System.getProperty("line.separator"))
+            var pointNumber = 0
+            for (row in rows) {
+                if (isDebugMode) {
+                    Log.v(
+                        packageNameString,
+                        "exportKml() reverseGeocode row: $row"
+                    )
+                }
+
+                if(0 == pointNumber){
+                    // 最初の行
+                    var fnameToAppend = f.nameWithoutExtension
+                    if (row.split(",")[0] != "" && row.split(",")[1] != "") {
+                        try {
+                            // 最初の行の経緯度から逆ジオコーディング
+                            val lngDouble = parseDouble(
+                                row.split(",")[0]) // 経度が先
+                            val latDouble = parseDouble(row.split(",")[1])
+
+                            // 測位に成功している場合
+                            if (latDouble >= -90.0 && lngDouble >= -180.0) {
+                                // 逆ジオコーディング
+                                if (::cityDbController.isInitialized) {
+                                    val searched =
+                                        cityDbController.searchCity(latDouble, lngDouble)
+
+                                    if (isDebugMode) {
+                                        Log.v(
+                                            packageNameString,
+                                            "exportKml() reverseGeocode searched: ${searched?.first} ${searched?.second}"
+                                        )
+                                    }
+
+                                    if (!searched?.first.isNullOrEmpty()) {
+                                        fnameToAppend = searched!!.first
+                                    }
+                                }
+                            }
+                        } catch (e: Exception) {
+                            if (isDebugMode) {
+                                Log.e(
+                                    packageNameString,
+                                    "exportKml() reverseGeocode row: $row $e"
+                                )
+                            }
+                        }
+                    }
+                    // ファイル名のパーツを設定
+                    if (isDebugMode) {
+                        Log.v(
+                            packageNameString,
+                            "exportKml() reverseGeocode fnameToAppend: $fnameToAppend"
+                        )
+                    }
+                    sbFileName.append(fnameToAppend).append("_")
+                }
+
+                pointNumber++
+
+                val coordinatesString =
+                    row.split(",")[0] + "," + row.split(",")[1] + "," + row.split(",")[2]
+                val datetimeString = row.split(",")[4]
+                pointsCoordinatesString += """                    <Placemark>
+						<name>${"%02d".format(routeNumber)}${"%04d".format(pointNumber)}</name>
+						<TimeStamp>
+							<when>${datetimeString}</when>
+						</TimeStamp>
+						<styleUrl>#route</styleUrl>
+						<Point>
+							<coordinates>${coordinatesString}</coordinates>
+						</Point>
+						<ExtendedData>
+							<Data name="IconNumber">
+								<value>901001</value>
+							</Data>
+						</ExtendedData>
+					</Placemark>
+                """.trimIndent()
+                pathsCoordinatesString += coordinatesString + System.getProperty("line.separator")
+            }
             if (isDebugMode) {
-                Log.v(packageNameString, "exportKml() f.name:${f.name} cont:$cont")
+                Log.v(
+                    packageNameString,
+                    "exportKml() f.name:${f.name} rows:$rows"
+                )
             }
 
             //
-            sbFileContent.append("</coordinates>").append(sep)
-            sbFileContent.append("</LineString>").append(sep)
-            sbFileContent.append("</Placemark>").append(sep)
-            sbFileContent.append("</Folder>").append(sep)
-            //
+            sbFileContent.append(
+                """
+			<Folder>
+				<name>Route${"%02d".format(routeNumber)}</name>
+				<Folder>
+					<name>Points</name>
+					${pointsCoordinatesString}
+				</Folder>
+				<Placemark>
+					<name>Path</name>
+					<Style>
+						<LineStyle>
+							<color>ff0000ff</color>
+							<width>2</width>
+						</LineStyle>
+					</Style>
+					<LineString>
+						<tessellate>1</tessellate>
+						<coordinates>
+${pathsCoordinatesString}
+						</coordinates>
+					</LineString>
+				</Placemark>
+			</Folder>
+            """.trimIndent()
+            ).append(sep)
         }
 
-        sbFileContent.append("</Folder>").append(sep)
-        sbFileContent.append("</Document>").append(sep)
-        sbFileContent.append("</kml>")
+        sbFileContent.append(
+            KmlUtil.KmlFooter.trimIndent()
+        )
 
         val concatFilename = sbFileName.toString()
+        if (isDebugMode) {
+            Log.v(
+                packageNameString,
+                "exportKml() reverseGeocode concatFilename: $concatFilename"
+            )
+        }
         saveExternalPublicTextFile(concatFilename.substring(0, concatFilename.length - 1) + ".kml")
         safContent = sbFileContent.toString()
     }

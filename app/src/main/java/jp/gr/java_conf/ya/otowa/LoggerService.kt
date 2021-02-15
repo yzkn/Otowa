@@ -16,6 +16,9 @@ import androidx.core.app.NotificationCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.preference.PreferenceManager
 import com.google.android.gms.location.*
+import java.text.DateFormat
+import java.text.SimpleDateFormat
+import java.util.*
 
 
 class LoggerService : Service() {
@@ -67,6 +70,11 @@ class LoggerService : Service() {
 
     private var preLine = ""
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // ISO8601
+        val tzUtc: TimeZone = TimeZone.getTimeZone("UTC")
+        val dfIso: DateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.JAPAN)
+        dfIso.timeZone = tzUtc
+
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult?) {
                 locationResult ?: return
@@ -95,20 +103,15 @@ class LoggerService : Service() {
                                 )
                             }
 
-                            // val sdfFyyyyMMddHHmmss = SimpleDateFormat("yyyy/MM/dd HH:mm:ss", Locale.JAPAN)
-                            // strBuf.append("${location.latitude}")
-                            // strBuf.append("${location.longitude}")
-                            // strBuf.append("${location.accuracy}")
-                            // strBuf.append("${location.altitude}")
-                            // strBuf.append("${location.speed}")
-                            // strBuf.append("${location.bearing}")
-                            // strBuf.append(sdfFyyyyMMddHHmmss.format(location.time))
-
                             strBuf.append("${location.longitude}")
                             strBuf.append(",")
                             strBuf.append("${location.latitude}")
                             strBuf.append(",")
                             strBuf.append("${location.altitude}")
+                            strBuf.append(",")
+                            strBuf.append("${location.speed}")
+                            strBuf.append(",")
+                            strBuf.append("${dfIso.format(Date())}")
                             strBuf.append(System.getProperty("line.separator"))
                         }
 

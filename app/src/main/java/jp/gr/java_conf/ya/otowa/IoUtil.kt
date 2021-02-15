@@ -15,8 +15,6 @@ class IoUtil(context: Context) {
     private var isDebugMode = false
     private var packageNameString = ""
 
-    private var stringBuffer: StringBuffer? = null
-
     fun saveExternalPrivateTextFile(logString: String?, mode: Boolean) {
         if (isDebugMode) {
             Log.v(packageNameString, "saveExternalPrivateTextFile()")
@@ -52,7 +50,7 @@ class IoUtil(context: Context) {
         }
     }
 
-    fun listExternalPrivateTextFiles(): List<File>{
+    fun listExternalPrivateTextFiles(): List<File> {
         if (checkIfExternalStorageIsReadable()) {
             try {
                 val files = baseDirectory?.listFiles()
@@ -68,44 +66,40 @@ class IoUtil(context: Context) {
         return arrayListOf()
     }
 
-    fun readExternalPrivateTextFile(filename: String): String? {
-        stringBuffer = StringBuffer()
+    fun readExternalPrivateTextFile(filename: String): List<String> {
+        val rowList = mutableListOf<String>()
 
-        if (stringBuffer != null) {
-            if (checkIfExternalStorageIsReadable()) {
-                try {
-                    val readFile = File(baseDirectory, filename)
-                    FileInputStream(readFile).use { fileInputStream ->
-                        InputStreamReader(
-                            fileInputStream,
-                            StandardCharsets.UTF_8
-                        ).use { inputStreamReader ->
-                            BufferedReader(inputStreamReader).use { reader ->
-                                var lineBuffer = ""
-                                while (reader.readLine().also { lineBuffer = it } != null) {
-                                    stringBuffer!!.append(lineBuffer)
-                                    stringBuffer!!.append(System.getProperty("line.separator"))
-                                }
-                            }
+        if (checkIfExternalStorageIsReadable()) {
+            try {
+                val readFile = File(baseDirectory, filename)
+                FileInputStream(readFile).bufferedReader().use {
+                    var row: String?
+                    while (true) {
+                        row = it.readLine()
+                        if (row != null) {
+                            rowList.add(row)
+                        } else {
+                            break
                         }
                     }
-                } catch (e: java.lang.Exception) {
-                    if (isDebugMode) {
-                        Log.e(packageNameString, "readExternalPrivateTextFile() $e")
-                    }
+                }
+
+                return rowList
+            } catch (e: java.lang.Exception) {
+                if (isDebugMode) {
+                    Log.e(packageNameString, "readExternalPrivateTextFile() $e")
                 }
             }
-
-            return stringBuffer.toString()
         }
-        return ""
+
+        return mutableListOf()
     }
 
     private fun checkIfExternalStorageIsWritable(): Boolean {
         return try {
             val state = Environment.getExternalStorageState()
             Environment.MEDIA_MOUNTED == state
-        }catch (e: java.lang.Exception){
+        } catch (e: java.lang.Exception) {
             false
         }
     }
@@ -114,7 +108,7 @@ class IoUtil(context: Context) {
         return try {
             val state = Environment.getExternalStorageState()
             Environment.MEDIA_MOUNTED == state || Environment.MEDIA_MOUNTED_READ_ONLY == state
-        }catch (e: java.lang.Exception){
+        } catch (e: java.lang.Exception) {
             false
         }
     }
