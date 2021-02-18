@@ -1046,6 +1046,10 @@ class MainActivity : AppCompatActivity() {
 
         val sep = System.getProperty("line.separator")
 
+        if(ioUtil.listExternalPrivateTextFiles().isEmpty()){
+            return
+        }
+
         sbFileContent.append(
             KmlUtil.KmlHeader.trimIndent()
         ).append(sep)
@@ -1190,7 +1194,13 @@ ${pathsCoordinatesString}
                 "exportKml() reverseGeocode concatFilename: $concatFilename"
             )
         }
-        saveExternalPublicTextFile(concatFilename.substring(0, concatFilename.length - 1) + ".kml")
+
+        val date = Date()
+        val sdfFyyyyMMddHH = SimpleDateFormat("yyyyMMddHHmmss", Locale.JAPAN)
+        val dateString = sdfFyyyyMMddHH.format(date)
+        val filenameHeader = "Route${dateString}_"
+
+        saveExternalPublicTextFile(filenameHeader + concatFilename.substring(0, concatFilename.length - 1) + ".kml")
         safContent = sbFileContent.toString()
     }
 
