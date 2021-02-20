@@ -116,7 +116,7 @@ class FirstFragment : Fragment() {
     }
 
     override fun onDestroy() {
-        soundPool?.release()
+        soundPool.release()
 
         super.onDestroy()
     }

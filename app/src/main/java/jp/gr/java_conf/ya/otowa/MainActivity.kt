@@ -1076,60 +1076,64 @@ class MainActivity : AppCompatActivity() {
                     )
                 }
 
-                if(0 == pointNumber){
-                    // 最初の行
-                    var fnameToAppend = f.nameWithoutExtension
-                    if (row.split(",")[0] != "" && row.split(",")[1] != "") {
-                        try {
-                            // 最初の行の経緯度から逆ジオコーディング
-                            val lngDouble = parseDouble(
-                                row.split(",")[0]) // 経度が先
-                            val latDouble = parseDouble(row.split(",")[1])
+                if(row !="") {
+                    if (row.split(",").size == 5) {
 
-                            // 測位に成功している場合
-                            if (latDouble >= -90.0 && lngDouble >= -180.0) {
-                                // 逆ジオコーディング
-                                if (::cityDbController.isInitialized) {
-                                    val searched =
-                                        cityDbController.searchCity(latDouble, lngDouble)
+                        if (0 == pointNumber) {
+                            // 最初の行
+                            var fnameToAppend = f.nameWithoutExtension
+                            if (row.split(",")[0] != "" && row.split(",")[1] != "") {
+                                try {
+                                    // 最初の行の経緯度から逆ジオコーディング
+                                    val lngDouble = parseDouble(
+                                        row.split(",")[0]
+                                    ) // 経度が先
+                                    val latDouble = parseDouble(row.split(",")[1])
 
-                                    if (isDebugMode) {
-                                        Log.v(
-                                            packageNameString,
-                                            "exportKml() reverseGeocode searched: ${searched?.first} ${searched?.second}"
-                                        )
+                                    // 測位に成功している場合
+                                    if (latDouble >= -90.0 && lngDouble >= -180.0) {
+                                        // 逆ジオコーディング
+                                        if (::cityDbController.isInitialized) {
+                                            val searched =
+                                                cityDbController.searchCity(latDouble, lngDouble)
+
+                                            if (isDebugMode) {
+                                                Log.v(
+                                                    packageNameString,
+                                                    "exportKml() reverseGeocode searched: ${searched?.first} ${searched?.second}"
+                                                )
+                                            }
+
+                                            if (!searched?.first.isNullOrEmpty()) {
+                                                fnameToAppend = searched!!.first
+                                            }
+                                        }
                                     }
-
-                                    if (!searched?.first.isNullOrEmpty()) {
-                                        fnameToAppend = searched!!.first
+                                } catch (e: Exception) {
+                                    if (isDebugMode) {
+                                        Log.e(
+                                            packageNameString,
+                                            "exportKml() reverseGeocode row: $row $e"
+                                        )
                                     }
                                 }
                             }
-                        } catch (e: Exception) {
+                            // ファイル名のパーツを設定
                             if (isDebugMode) {
-                                Log.e(
+                                Log.v(
                                     packageNameString,
-                                    "exportKml() reverseGeocode row: $row $e"
+                                    "exportKml() reverseGeocode fnameToAppend: $fnameToAppend"
                                 )
                             }
+                            sbFileName.append(fnameToAppend).append("_")
                         }
-                    }
-                    // ファイル名のパーツを設定
-                    if (isDebugMode) {
-                        Log.v(
-                            packageNameString,
-                            "exportKml() reverseGeocode fnameToAppend: $fnameToAppend"
-                        )
-                    }
-                    sbFileName.append(fnameToAppend).append("_")
-                }
 
-                pointNumber++
+                        pointNumber++
 
-                val coordinatesString =
-                    row.split(",")[0] + "," + row.split(",")[1] + "," + row.split(",")[2]
-                val datetimeString = row.split(",")[4]
-                pointsCoordinatesString += """                    <Placemark>
+                        val coordinatesString =
+                            row.split(",")[0] + "," + row.split(",")[1] + "," + row.split(",")[2]
+                        val datetimeString = row.split(",")[4]
+                        pointsCoordinatesString += """                    <Placemark>
 						<name>${"%02d".format(routeNumber)}${"%04d".format(pointNumber)}</name>
 						<TimeStamp>
 							<when>${datetimeString}</when>
@@ -1144,8 +1148,10 @@ class MainActivity : AppCompatActivity() {
 							</Data>
 						</ExtendedData>
 					</Placemark>
-                """.trimIndent()
-                pathsCoordinatesString += coordinatesString + System.getProperty("line.separator")
+                    """.trimIndent()
+                        pathsCoordinatesString += coordinatesString + System.getProperty("line.separator")
+                    }
+                }
             }
             if (isDebugMode) {
                 Log.v(
@@ -1208,7 +1214,8 @@ ${pathsCoordinatesString}
     private fun saveExternalPublicTextFile(filename: String) {
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
         intent.addCategory(Intent.CATEGORY_OPENABLE)
-        intent.type = "text/plain"
+        // intent.type = "text/plain"
+        intent.type = "application/vnd.google-earth.kml+xml"
         intent.putExtra(Intent.EXTRA_TITLE, filename)
         startActivityForResult(intent, WRITE_REQUEST_CODE)
     }
