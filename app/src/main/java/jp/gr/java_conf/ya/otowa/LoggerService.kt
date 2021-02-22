@@ -98,11 +98,13 @@ class LoggerService : Service() {
                                 // 前の行も空行なら追加しない
                             }
                         } else {
+                            // km/h
+                            val speedString = if (location.speed >= 10) "%03.1f".format(location.speed * 3600 / 1000) else "000.0"
+
                             if (isDebugMode && isDebugModeLoop) {
                                 Log.v(
                                     packageNameString,
-                                    "onStartCommand() onLocationResult() !inHomeArea(location) location ${location.latitude} , ${location.longitude} ${location.altitude} " +
-                                            "%03.1f".format(location.speed * 3600 / 1000)
+                                    "onStartCommand() onLocationResult() !inHomeArea(location) location ${location.latitude} , ${location.longitude} ${location.altitude} $speedString"
                                 )
                             }
 
@@ -112,7 +114,7 @@ class LoggerService : Service() {
                             strBuf.append(",")
                             strBuf.append("${location.altitude}")
                             strBuf.append(",")
-                            strBuf.append("%03.1f".format(location.speed * 3600 / 1000)) // km/h
+                            strBuf.append(speedString)
                             strBuf.append(",")
                             strBuf.append(dfIso.format(Date()))
                             strBuf.append(System.getProperty("line.separator"))
