@@ -113,6 +113,10 @@
             app:key="pref_is_debug_mode"
             app:title="@string/is_debug_mode" />
 
+        <SwitchPreferenceCompat
+            app:key="pref_is_debug_mode_loop"
+            app:title="@string/is_debug_mode_loop" />
+
         <EditTextPreference
             android:defaultValue=""
             android:selectAllOnFocus="false"

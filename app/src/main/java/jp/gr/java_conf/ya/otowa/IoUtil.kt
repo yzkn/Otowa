@@ -13,10 +13,11 @@ import java.util.*
 class IoUtil(context: Context) {
     private var baseDirectory: File?
     private var isDebugMode = false
+    private var isDebugModeLoop = false
     private var packageNameString = ""
 
     fun saveExternalPrivateTextFile(logString: String?, mode: Boolean) {
-        if (isDebugMode) {
+        if (isDebugMode && isDebugModeLoop) {
             Log.v(packageNameString, "saveExternalPrivateTextFile()")
         }
         if (checkIfExternalStorageIsWritable()) {
@@ -27,8 +28,8 @@ class IoUtil(context: Context) {
                 val dateString = sdfFyyyyMMddHH.format(date)
                 val filename = "Route$dateString.csv"
                 val saveFile = File(baseDirectory, filename)
-                if (isDebugMode) {
-                    Log.v(packageNameString, "init() filename:$filename")
+                if (isDebugMode && isDebugModeLoop) {
+                    Log.v(packageNameString, "saveExternalPrivateTextFile() filename:$filename")
                 }
 
                 FileOutputStream(saveFile, mode).use { fileOutputStream ->
@@ -118,6 +119,7 @@ class IoUtil(context: Context) {
 
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
         isDebugMode = sharedPreferences.getBoolean("pref_is_debug_mode", false)
+        isDebugModeLoop = sharedPreferences.getBoolean("pref_is_debug_mode_loop", false)
 
         baseDirectory = context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)
         if (isDebugMode) {

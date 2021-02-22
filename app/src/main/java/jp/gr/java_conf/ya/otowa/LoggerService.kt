@@ -41,6 +41,7 @@ class LoggerService : Service() {
     private lateinit var ioUtil: IoUtil
 
     private var isDebugMode = false
+    private var isDebugModeLoop = false
     private var packageNameString = ""
 
     // running status check
@@ -57,6 +58,7 @@ class LoggerService : Service() {
 
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
         isDebugMode = sharedPreferences.getBoolean("pref_is_debug_mode", false)
+        isDebugModeLoop = sharedPreferences.getBoolean("pref_is_debug_mode_loop", false)
 
         // external storage
         ioUtil = IoUtil(applicationContext)
@@ -84,8 +86,8 @@ class LoggerService : Service() {
                         val strBuf = StringBuilder()
 
                         if (inHomeArea(location)) {
-                            if (isDebugMode) {
-                                Log.d(
+                            if (isDebugMode && isDebugModeLoop) {
+                                Log.v(
                                     packageNameString,
                                     "onStartCommand() onLocationResult() inHomeArea(location) location ${location.latitude} , ${location.longitude}"
                                 )
@@ -96,10 +98,11 @@ class LoggerService : Service() {
                                 // 前の行も空行なら追加しない
                             }
                         } else {
-                            if (isDebugMode) {
-                                Log.d(
+                            if (isDebugMode && isDebugModeLoop) {
+                                Log.v(
                                     packageNameString,
-                                    "onStartCommand() onLocationResult() !inHomeArea(location) location ${location.latitude} , ${location.longitude}"
+                                    "onStartCommand() onLocationResult() !inHomeArea(location) location ${location.latitude} , ${location.longitude} ${location.altitude} " +
+                                            "%03.1f".format(location.speed * 3600 / 1000)
                                 )
                             }
 
@@ -109,9 +112,9 @@ class LoggerService : Service() {
                             strBuf.append(",")
                             strBuf.append("${location.altitude}")
                             strBuf.append(",")
-                            strBuf.append("${location.speed}")
+                            strBuf.append("%03.1f".format(location.speed * 3600 / 1000)) // km/h
                             strBuf.append(",")
-                            strBuf.append("${dfIso.format(Date())}")
+                            strBuf.append(dfIso.format(Date()))
                             strBuf.append(System.getProperty("line.separator"))
                         }
 
@@ -210,7 +213,7 @@ class LoggerService : Service() {
         val homeAreaRadiusString = sharedPreferences.getString("pref_home_area_radius", "") ?: ""
 
         if (homeAreaLatitudeString != "" && homeAreaLongitudeString != "" && homeAreaRadiusString != "") {
-            if (isDebugMode) {
+            if (isDebugMode && isDebugModeLoop) {
                 Log.v(
                     packageNameString, "LoggerService inHomeArea() !empty:"
                             + " homeAreaLatitudeString: $homeAreaLatitudeString"
@@ -223,7 +226,7 @@ class LoggerService : Service() {
                 val homeAreaLatitude = java.lang.Double.parseDouble(homeAreaLatitudeString)
                 val homeAreaLongitude = java.lang.Double.parseDouble(homeAreaLongitudeString)
                 val homeAreaRadius = java.lang.Double.parseDouble(homeAreaRadiusString)
-                if (isDebugMode) {
+                if (isDebugMode && isDebugModeLoop) {
                     Log.v(
                         packageNameString, "LoggerService inHomeArea() parsed:"
                                 + " homeAreaLatitude: $homeAreaLatitude"
@@ -244,7 +247,7 @@ class LoggerService : Service() {
                     if (results.isNotEmpty()) {
                         val distance = results[0].toDouble()
                         if (distance < homeAreaRadius) {
-                            if (isDebugMode) {
+                            if (isDebugMode && isDebugModeLoop) {
                                 Log.v(
                                     packageNameString,
                                     "LoggerService inHomeArea() home-area:"
@@ -272,7 +275,7 @@ class LoggerService : Service() {
             }
         } else {
             // 未設定の場合
-            if (isDebugMode) {
+            if (isDebugMode && isDebugModeLoop) {
                 Log.v(
                     packageNameString, "LoggerService inHomeArea() empty"
                             + " homeAreaLatitudeString: $homeAreaLatitudeString"

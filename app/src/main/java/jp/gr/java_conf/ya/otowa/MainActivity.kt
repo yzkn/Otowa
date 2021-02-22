@@ -53,6 +53,7 @@ class MainActivity : AppCompatActivity() {
 
     private var areas: Array<WeatherArea> = emptyArray()
     private var isDebugMode = false
+    private var isDebugModeLoop = false
     private var isLocationUpdatesStarted = false
     private var packageNameString = ""
     private var updatedCount = 0
@@ -69,6 +70,7 @@ class MainActivity : AppCompatActivity() {
 
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
         isDebugMode = sharedPreferences.getBoolean("pref_is_debug_mode", false)
+        isDebugModeLoop = sharedPreferences.getBoolean("pref_is_debug_mode_loop", false)
         with(sharedPreferences.edit()) {
             putString("pref_current_latitude", "")
             putString("pref_current_longitude", "")
@@ -143,21 +145,21 @@ class MainActivity : AppCompatActivity() {
         )
         areas += area
         if (isDebugMode) {
-            Log.v(packageNameString, "readCsv() area: ${area}")
+            Log.v(packageNameString, "readCsv() area: $area")
         }
     }
 
     private fun locate(locationResult: LocationResult) {
         for (location in locationResult.locations) {
             try {
-                if (isDebugMode) {
+                if (isDebugMode && isDebugModeLoop) {
                     Log.v(packageNameString, "locate() location")
                 }
 
                 updatedCount++
 
                 if (inHomeArea(location)) {
-                    if (isDebugMode) {
+                    if (isDebugMode && isDebugModeLoop) {
                         Log.v(
                             packageNameString,
                             "locate() $updatedCount ${location.latitude} , ${location.longitude} inHomeArea"
@@ -176,7 +178,7 @@ class MainActivity : AppCompatActivity() {
                     // 測位ボタンを無効化する
                     updateLocateButton()
                 } else {
-                    if (isDebugMode) {
+                    if (isDebugMode && isDebugModeLoop) {
                         Log.v(
                             packageNameString,
                             "onCreate() $updatedCount ${location.latitude} , ${location.longitude} !inHomeArea"
@@ -198,7 +200,7 @@ class MainActivity : AppCompatActivity() {
 
                 // 測位ごとに毎回行う
                 try {
-                    if (isDebugMode) {
+                    if (isDebugMode && isDebugModeLoop) {
                         Log.v(packageNameString, "locate() 測位ごとに毎回行う")
                     }
 
@@ -222,7 +224,7 @@ class MainActivity : AppCompatActivity() {
                 // たまに行う
                 if (1 == (updatedCount % 1000)) {
                     try {
-                        if (isDebugMode) {
+                        if (isDebugMode && isDebugModeLoop) {
                             Log.v(packageNameString, "locate() たまに行う")
                         }
 
@@ -239,7 +241,7 @@ class MainActivity : AppCompatActivity() {
                 // ごくまれに行う
                 if (1 == (updatedCount % 100000)) {
                     try {
-                        if (isDebugMode) {
+                        if (isDebugMode && isDebugModeLoop) {
                             Log.v(packageNameString, "locate() ごくまれに行う")
                         }
 
@@ -267,7 +269,7 @@ class MainActivity : AppCompatActivity() {
         val homeAreaRadiusString = sharedPreferences.getString("pref_home_area_radius", "") ?: ""
 
         if (homeAreaLatitudeString != "" && homeAreaLongitudeString != "" && homeAreaRadiusString != "") {
-            if (isDebugMode) {
+            if (isDebugMode && isDebugModeLoop) {
                 Log.v(
                     packageNameString, "inHomeArea() !empty:"
                             + " homeAreaLatitudeString: $homeAreaLatitudeString"
@@ -280,7 +282,7 @@ class MainActivity : AppCompatActivity() {
                 val homeAreaLatitude = java.lang.Double.parseDouble(homeAreaLatitudeString)
                 val homeAreaLongitude = java.lang.Double.parseDouble(homeAreaLongitudeString)
                 val homeAreaRadius = java.lang.Double.parseDouble(homeAreaRadiusString)
-                if (isDebugMode) {
+                if (isDebugMode && isDebugModeLoop) {
                     Log.v(
                         packageNameString, "inHomeArea() parsed:"
                                 + " homeAreaLatitude: $homeAreaLatitude"
@@ -301,7 +303,7 @@ class MainActivity : AppCompatActivity() {
                     if (results.isNotEmpty()) {
                         val distance = results[0].toDouble()
                         if (distance < homeAreaRadius) {
-                            if (isDebugMode) {
+                            if (isDebugMode && isDebugModeLoop) {
                                 Log.v(
                                     packageNameString,
                                     "inHomeArea() home-area:"
@@ -329,7 +331,7 @@ class MainActivity : AppCompatActivity() {
             }
         } else {
             // 未設定の場合
-            if (isDebugMode) {
+            if (isDebugMode && isDebugModeLoop) {
                 Log.v(
                     packageNameString, "inHomeArea() empty"
                             + " homeAreaLatitudeString: $homeAreaLatitudeString"
@@ -384,7 +386,7 @@ class MainActivity : AppCompatActivity() {
             if (::cityDbController.isInitialized) {
                 val searched =
                     cityDbController.searchCity(latitude, longitude)
-                if (isDebugMode) {
+                if (isDebugMode && isDebugModeLoop) {
                     Log.v(
                         packageNameString,
                         "updateLocateButton() searched: ${searched?.first} ${searched?.second}"
@@ -407,7 +409,7 @@ class MainActivity : AppCompatActivity() {
         if (isDebugMode) {
             Log.v(
                 packageNameString,
-                "updateWeatherForecastLabel() latitude: ${latitude} longitude: ${longitude}"
+                "updateWeatherForecastLabel() latitude: $latitude longitude: $longitude"
             )
         }
 
@@ -434,21 +436,21 @@ class MainActivity : AppCompatActivity() {
                     )
                     if (results.isNotEmpty()) {
                         val distance = results[0].toDouble()
-                        // if (isDebugMode) {
-                        //     Log.v(
-                        //         packageNameString,
-                        //         "updateWeatherReportLabel() city: ${area.city} distance: $distance"
-                        //     )
-                        // }
+                         if (isDebugMode && isDebugModeLoop) {
+                             Log.v(
+                                 packageNameString,
+                                 "updateWeatherReportLabel() city: ${area.city} distance: $distance"
+                             )
+                         }
                         if (distance <= minDistance) {
                             minDistance = distance
                             nearestArea = area
-                            // if (isDebugMode) {
-                            //     Log.v(
-                            //         packageNameString,
-                            //         "updateWeatherReportLabel() NearestArea city: ${area.city} distance: $distance minDistance: $minDistance"
-                            //     )
-                            // }
+                             if (isDebugMode && isDebugModeLoop) {
+                                 Log.v(
+                                     packageNameString,
+                                     "updateWeatherReportLabel() NearestArea city: ${area.city} distance: $distance minDistance: $minDistance"
+                                 )
+                             }
                         }
                     }
                 } catch (e: Exception) {
@@ -579,7 +581,7 @@ class MainActivity : AppCompatActivity() {
         if (isDebugMode) {
             Log.v(
                 packageNameString,
-                "updateSunriseSunsetLabel() latitude: ${latitude} longitude: ${longitude}"
+                "updateSunriseSunsetLabel() latitude: $latitude longitude: $longitude"
             )
         }
 
@@ -602,8 +604,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateCompass(bearing: Float, speed: Float) {
-        if (isDebugMode) {
-            Log.v(packageNameString, "updateCpmpass() bearing: $bearing")
+        if (isDebugMode && isDebugModeLoop) {
+            Log.v(packageNameString, "updateCompass() bearing: $bearing")
         }
 
         val textviewCompass = findViewById<TextView>(R.id.textview_compass)
@@ -656,7 +658,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateAltimeter(altitude: Double) {
-        if (isDebugMode) {
+        if (isDebugMode && isDebugModeLoop) {
             Log.v(packageNameString, "updateAltimeter() altitude: $altitude")
         }
 
@@ -675,7 +677,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateSpeedMeter(speed: Float) {
-        if (isDebugMode) {
+        if (isDebugMode && isDebugModeLoop) {
             Log.v(packageNameString, "updateSpeedMeter() speed: $speed")
         }
 
@@ -954,12 +956,12 @@ class MainActivity : AppCompatActivity() {
         var wifiAvailable = false
         var cellulerAvailable = false
         connectivityManager.allNetworks.forEach { network ->
-            if (isDebugMode) {
-                Log.v(
-                    packageNameString,
-                    "checkConnection() network: $network"
-                )
-            }
+            // if (isDebugMode) {
+            //      Log.v(
+            //         packageNameString,
+            //         "checkConnection() network: $network"
+            //     )
+            // }
             if (connectivityManager.getNetworkCapabilities(network)
                     ?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
             ) {
@@ -1010,7 +1012,7 @@ class MainActivity : AppCompatActivity() {
 
         val ioUtil = IoUtil(this)
         for (f in ioUtil.listExternalPrivateTextFiles()) {
-            if (isDebugMode) {
+            if (isDebugMode && isDebugModeLoop) {
                 Log.v(packageNameString, "cleanKml() f:$f")
             }
             try {
@@ -1040,15 +1042,26 @@ class MainActivity : AppCompatActivity() {
         safContent = ""
 
         val ioUtil = IoUtil(this)
+        if(ioUtil.listExternalPrivateTextFiles().isEmpty()){
+            Toast.makeText(
+                this,
+                getStr(R.string.action_kml_export_empty),
+                Toast.LENGTH_LONG
+            ).show()
+
+            return
+        }
+
+        Toast.makeText(
+            this,
+            getStr(R.string.action_kml_exporting),
+            Toast.LENGTH_LONG
+        ).show()
 
         val sbFileName = StringBuilder()
         val sbFileContent = StringBuilder()
 
         val sep = System.getProperty("line.separator")
-
-        if(ioUtil.listExternalPrivateTextFiles().isEmpty()){
-            return
-        }
 
         sbFileContent.append(
             KmlUtil.KmlHeader.trimIndent()
@@ -1058,7 +1071,7 @@ class MainActivity : AppCompatActivity() {
         for (f in ioUtil.listExternalPrivateTextFiles()) {
             routeNumber++
 
-            if (isDebugMode) {
+            if (isDebugMode && isDebugModeLoop) {
                 Log.v(packageNameString, "exportKml() f:$f")
             }
 
@@ -1069,7 +1082,7 @@ class MainActivity : AppCompatActivity() {
 
             var pointNumber = 0
             for (row in rows) {
-                if (isDebugMode) {
+                if (isDebugMode && isDebugModeLoop) {
                     Log.v(
                         packageNameString,
                         "exportKml() reverseGeocode row: $row"
@@ -1097,7 +1110,7 @@ class MainActivity : AppCompatActivity() {
                                             val searched =
                                                 cityDbController.searchCity(latDouble, lngDouble)
 
-                                            if (isDebugMode) {
+                                            if (isDebugMode && isDebugModeLoop) {
                                                 Log.v(
                                                     packageNameString,
                                                     "exportKml() reverseGeocode searched: ${searched?.first} ${searched?.second}"
@@ -1119,7 +1132,7 @@ class MainActivity : AppCompatActivity() {
                                 }
                             }
                             // ファイル名のパーツを設定
-                            if (isDebugMode) {
+                            if (isDebugMode && isDebugModeLoop) {
                                 Log.v(
                                     packageNameString,
                                     "exportKml() reverseGeocode fnameToAppend: $fnameToAppend"
@@ -1131,10 +1144,13 @@ class MainActivity : AppCompatActivity() {
                         pointNumber++
 
                         val coordinatesString =
-                            row.split(",")[0] + "," + row.split(",")[1] + "," + row.split(",")[2]
-                        val datetimeString = row.split(",")[4]
+                            row.split(",")[0] + "," + // longitude
+                                    row.split(",")[1] + "," + // latitude
+                                    row.split(",")[2] // altitude
+                        val speedString = row.split(",")[3] // speed
+                        val datetimeString = row.split(",")[4] // dfIso
                         pointsCoordinatesString += """                    <Placemark>
-						<name>${"%02d".format(routeNumber)}${"%04d".format(pointNumber)}</name>
+						<name>${"%02d".format(routeNumber)}${"%04d".format(pointNumber)}S${speedString}</name>
 						<TimeStamp>
 							<when>${datetimeString}</when>
 						</TimeStamp>
@@ -1153,7 +1169,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
-            if (isDebugMode) {
+            if (isDebugMode && isDebugModeLoop) {
                 Log.v(
                     packageNameString,
                     "exportKml() f.name:${f.name} rows:$rows"
@@ -1167,7 +1183,7 @@ class MainActivity : AppCompatActivity() {
 				<name>Route${"%02d".format(routeNumber)}</name>
 				<Folder>
 					<name>Points</name>
-					${pointsCoordinatesString}
+					$pointsCoordinatesString
 				</Folder>
 				<Placemark>
 					<name>Path</name>
@@ -1180,7 +1196,7 @@ class MainActivity : AppCompatActivity() {
 					<LineString>
 						<tessellate>1</tessellate>
 						<coordinates>
-${pathsCoordinatesString}
+$pathsCoordinatesString
 						</coordinates>
 					</LineString>
 				</Placemark>
