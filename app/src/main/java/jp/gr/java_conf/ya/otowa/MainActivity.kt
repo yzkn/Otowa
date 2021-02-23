@@ -735,9 +735,11 @@ class MainActivity : AppCompatActivity() {
         if (buttonLogging != null) {
             if (!LoggerService.isRunning(this)) {
                 // ロガーがまだ起動していなければ、ボタンのラベルを「開始」に変更
+                buttonLogging.setTextColor(Color.RED)
                 buttonLogging.text = getStr(R.string.logging_start)
             } else {
                 // 起動済みならば、ボタンのラベルを「停止」に変更
+                buttonLogging.setTextColor(Color.WHITE)
                 buttonLogging.text = getStr(R.string.logging_stop)
             }
         }

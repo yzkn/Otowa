@@ -8,6 +8,7 @@ import android.content.Context.SENSOR_SERVICE
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -364,12 +365,14 @@ class FirstFragment : Fragment() {
         if (buttonLogging != null) {
             if (!LoggerService.isRunning(requireContext())) {
                 // ロガーがまだ起動していなければ、ボタンのラベルを「開始」に変更
+                buttonLogging.setTextColor(Color.RED)
                 buttonLogging.text = getStr(R.string.logging_start)
             } else {
                 // 起動済みならば、ボタンのラベルを「停止」に変更
+                buttonLogging.setTextColor(Color.WHITE)
                 buttonLogging.text = getStr(R.string.logging_stop)
             }
-            buttonLogging.setOnClickListener {
+            buttonLogging.setOnLongClickListener {
                 buttonLogging.isEnabled = false
 
                 val loggerServiceIntent = Intent(requireContext(), LoggerService::class.java)
@@ -378,16 +381,21 @@ class FirstFragment : Fragment() {
                     activity?.startForegroundService(loggerServiceIntent)
 
                     // ボタンのラベルを「停止」に変更
+                    buttonLogging.setTextColor(Color.WHITE)
                     buttonLogging.text = getStr(R.string.logging_stop)
                 } else {
                     // 起動済みならば、ロガーを停止
                     activity?.stopService(loggerServiceIntent)
 
                     // ボタンのラベルを「開始」に変更
+                    buttonLogging.setTextColor(Color.RED)
                     buttonLogging.text = getStr(R.string.logging_start)
                 }
 
                 buttonLogging.isEnabled = true
+
+                // return
+                true
             }
         }
     }
@@ -909,25 +917,32 @@ class FirstFragment : Fragment() {
 
                         if (!searched?.first.isNullOrEmpty() && !searched?.second.isNullOrEmpty()) {
                             if (direct) {
+                                val prefixText = createdView.findViewById<EditText>(R.id.tweet_prefix).text.toString()
+                                val suffixText = createdView.findViewById<EditText>(R.id.tweet_suffix).text.toString()
                                 val buf = StringBuilder().also {
-                                    it.append(createdView.findViewById<EditText>(R.id.tweet_prefix).text)
+                                    it.append(prefixText + (if (prefixText.isNotEmpty() && (" " != prefixText.substring(prefixText.length - 1, 1))) " " else ""))
                                     it.append(searched?.first)
                                     it.append(searched?.second)
                                     it.append(" ")
                                     it.append(url)
-                                    it.append(" ")
-                                    it.append(createdView.findViewById<EditText>(R.id.tweet_suffix).text)
+                                    it.append((if (suffixText.isNotEmpty() && (" " != suffixText.substring(0, 1))) " " else "") + suffixText)
                                 }
                                 updateTweet(buf.toString())
                             } else {
-                                val et = view?.findViewById<EditText>(R.id.tweet_main)
-                                if (et != null) {
-                                    val tweetMainText = et.text.toString()
-                                    et.setText(
-                                        (if (tweetMainText.isNotEmpty()) "$tweetMainText " else "") + searched?.first + searched?.second
+                                val mainEditText = view?.findViewById<EditText>(R.id.tweet_main)
+                                if (mainEditText != null) {
+                                    val tweetMainText = mainEditText.text.toString()
+                                    val buf = StringBuilder().also {
+                                        it.append(searched?.first)
+                                        it.append(searched?.second)
+                                        it.append(" ")
+                                        it.append(url)
+                                    }
+                                    mainEditText.setText(
+                                        (if (tweetMainText.isNotEmpty()) "$tweetMainText " else "") + buf.toString()
                                     )
-                                    et.requestFocus()
-                                    et.setSelection(et.text.length)
+                                    mainEditText.requestFocus()
+                                    mainEditText.setSelection(mainEditText.text.length)
                                 }
                             }
                         }
