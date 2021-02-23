@@ -1042,7 +1042,8 @@ class MainActivity : AppCompatActivity() {
         safContent = ""
 
         val ioUtil = IoUtil(this)
-        if(ioUtil.listExternalPrivateTextFiles().isEmpty()){
+        val externalPrivateTextFiles = ioUtil.listExternalPrivateTextFiles()
+        if(externalPrivateTextFiles.isEmpty()){
             Toast.makeText(
                 this,
                 getStr(R.string.action_kml_export_empty),
@@ -1068,7 +1069,7 @@ class MainActivity : AppCompatActivity() {
         ).append(sep)
 
         var routeNumber = 0
-        for (f in ioUtil.listExternalPrivateTextFiles()) {
+        for (f in externalPrivateTextFiles) {
             routeNumber++
 
             if (isDebugMode && isDebugModeLoop) {

@@ -56,6 +56,7 @@ class IoUtil(context: Context) {
             try {
                 val files = baseDirectory?.listFiles()
                 if (files != null) {
+                    Arrays.sort(files)
                     return files.toList()
                 }
             } catch (e: Exception) {
