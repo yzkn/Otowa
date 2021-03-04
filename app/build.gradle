@@ -70,6 +70,7 @@ dependencies {
 
     // Image
     implementation 'com.squareup.picasso:picasso:2.71828'
+    implementation 'com.github.corouteam:GlideToVectorYou:v2.0.0+'
 
     // DB
     implementation 'com.github.abnerescocio:assets-sqlite:1.4.1'

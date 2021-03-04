@@ -23,6 +23,7 @@ import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.beust.klaxon.Klaxon
+import com.github.twocoffeesoneteam.glidetovectoryou.GlideToVectorYou
 import com.google.android.gms.location.*
 import com.luckycatlabs.sunrisesunset.SunriseSunsetCalculator
 import com.squareup.picasso.Picasso
@@ -533,13 +534,26 @@ class MainActivity : AppCompatActivity() {
                                             lifecycleScope.launch(Dispatchers.Default) {
                                                 withContext(Dispatchers.Main) {
                                                     // アイコンを設定
-                                                    if (!::imageWeather.isInitialized) {
-                                                        imageWeather =
-                                                            findViewById<ImageButton>(R.id.image_weather)
+                                                    if(forecast.forecasts[0].image?.url != null) {
+                                                        if (!::imageWeather.isInitialized) {
+                                                            imageWeather =
+                                                                findViewById<ImageButton>(R.id.image_weather)
+                                                        }
+
+                                                        if (forecast.forecasts[0].image!!.url!!.endsWith(
+                                                                "png"
+                                                            )
+                                                        ) {
+                                                            Picasso.get()
+                                                                .load(forecast.forecasts[0].image!!.url)
+                                                                .into(imageWeather)
+                                                        } else {
+                                                            GlideToVectorYou
+                                                                .init()
+                                                                .with(applicationContext)
+                                                                .load(Uri.parse(forecast.forecasts[0].image!!.url), imageWeather)
+                                                        }
                                                     }
-                                                    Picasso.get()
-                                                        .load(forecast.forecasts[0].image?.url)
-                                                        .into(imageWeather)
 
                                                     // ラベルを設定
                                                     if (!::textViewWeather.isInitialized) {

@@ -66,6 +66,7 @@ class FirstFragment : Fragment() {
     private var loadedSoundTweeted = -1
     private var packageNameString = ""
     private var prefLocatingError = 0.0
+    private var preTweetedText = ""
 
     // 初期化処理
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -371,6 +372,13 @@ class FirstFragment : Fragment() {
                 // 起動済みならば、ボタンのラベルを「停止」に変更
                 buttonLogging.setTextColor(Color.WHITE)
                 buttonLogging.text = getStr(R.string.logging_stop)
+            }
+            buttonLogging.setOnClickListener {
+                Toast.makeText(
+                    activity,
+                    getStr(R.string.have_to_long_press_logging_button),
+                    Toast.LENGTH_SHORT
+                ).show()
             }
             buttonLogging.setOnLongClickListener {
                 buttonLogging.isEnabled = false
@@ -927,7 +935,21 @@ class FirstFragment : Fragment() {
                                     it.append(url)
                                     it.append((if (suffixText.isNotEmpty() && (" " != suffixText.substring(0, 1))) " " else "") + suffixText)
                                 }
-                                updateTweet(buf.toString())
+                                val tweetText = buf.toString()
+                                if(
+                                    (tweetText.contains(" ")) &&
+                                    (preTweetedText.contains(" ")) &&
+                                    (tweetText.split(" ")[0] == preTweetedText.split(" ")[0])
+                                ) {
+                                    Toast.makeText(
+                                        activity,
+                                        getStr(R.string.duplicated_tweet_text),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }else{
+                                    updateTweet(tweetText)
+                                }
+                                preTweetedText = tweetText
                             } else {
                                 val mainEditText = view?.findViewById<EditText>(R.id.tweet_main)
                                 if (mainEditText != null) {
