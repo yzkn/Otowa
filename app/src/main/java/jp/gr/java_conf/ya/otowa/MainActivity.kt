@@ -82,7 +82,7 @@ class MainActivity : AppCompatActivity() {
         createNotificationChannel()
 
         // CSVの読み取り
-        readCsv("area.csv")
+        readCsv()
 
         // 接続状況
         connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -100,23 +100,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                LoggerService.CHANNEL_ID,
-                getStr(R.string.logger),
-                NotificationManager.IMPORTANCE_DEFAULT
-            ).apply {
-                description = getStr(R.string.notification_description_logger)
-            }
-            val notificationManager =
-                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
+        val channel = NotificationChannel(
+            LoggerService.CHANNEL_ID,
+            getStr(R.string.logger),
+            NotificationManager.IMPORTANCE_DEFAULT
+        ).apply {
+            description = getStr(R.string.notification_description_logger)
         }
+        val notificationManager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
     }
 
-    private fun readCsv(filename: String) {
+    private fun readCsv() {
         try {
-            val file = resources.assets.open(filename)
+            val file = resources.assets.open("area.csv")
             val fileReader = BufferedReader(InputStreamReader(file))
             var i: Int = 0
             fileReader.forEachLine {
@@ -899,7 +897,7 @@ class MainActivity : AppCompatActivity() {
                 getStr(R.string.location_request_highacc),
                 Toast.LENGTH_LONG
             ).show()
-            return LocationRequest.create()?.apply {
+            return LocationRequest.create().apply {
                 interval = 5000
                 fastestInterval = 1000
                 priority = LocationRequest.PRIORITY_HIGH_ACCURACY
@@ -910,7 +908,7 @@ class MainActivity : AppCompatActivity() {
                 getStr(R.string.location_request_lowacc),
                 Toast.LENGTH_LONG
             ).show()
-            return LocationRequest.create()?.apply {
+            return LocationRequest.create().apply {
                 interval = 10000
                 fastestInterval = 5000
                 // priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
