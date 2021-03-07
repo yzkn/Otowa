@@ -18,6 +18,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.*
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
@@ -772,6 +773,10 @@ class MainActivity : AppCompatActivity() {
                 startActivity(Intent(applicationContext, SettingsActivity::class.java))
                 return true
             }
+            R.id.action_kml_list -> {
+                listKml()
+                return true
+            }
             R.id.action_kml_export -> {
                 exportKml()
                 return true
@@ -1025,27 +1030,104 @@ class MainActivity : AppCompatActivity() {
         }
 
         val ioUtil = IoUtil(this)
-        for (f in ioUtil.listExternalPrivateTextFiles()) {
-            if (isDebugMode && isDebugModeLoop) {
-                Log.v(packageNameString, "cleanKml() f:$f")
-            }
-            try {
-                f.delete()
-            } catch (e: Exception) {
-                if (isDebugMode) {
-                    Log.e(
-                        packageNameString,
-                        "cleanKml() $e"
-                    )
-                }
+        val externalPrivateTextFiles = ioUtil.listExternalPrivateTextFiles()
+
+        val stringList = mutableListOf<String>()
+        for (f in externalPrivateTextFiles) {
+            stringList.add(f.name)
+            if (isDebugMode) {
+                Log.v(packageNameString, "cleanKml() stringList.add: ${f.name}")
             }
         }
 
-        Toast.makeText(
-            this,
-            getStr(R.string.action_kml_cleaned),
-            Toast.LENGTH_LONG
-        ).show()
+        AlertDialog.Builder(this)
+            .setTitle(getStr(R.string.kml_clean_dialog) + "" + getStr(R.string.kml_clean_message))
+            .setItems(stringList.toTypedArray()) {_, which ->
+                if (isDebugMode && isDebugModeLoop) {
+                    Log.v(packageNameString, "cleanKml() externalPrivateTextFiles[$which]: ${externalPrivateTextFiles[which]}")
+                }
+                try {
+                    externalPrivateTextFiles[which].delete()
+
+                    Toast.makeText(
+                        this,
+                        getStr(R.string.action_kml_deleted),
+                        Toast.LENGTH_LONG
+                    ).show()
+                } catch (e: Exception) {
+                    if (isDebugMode) {
+                        Log.e(
+                            packageNameString,
+                            "cleanKml() $e"
+                        )
+                    }
+                }
+            }
+            .setPositiveButton(getStr(R.string.clean_all_kmls)) { _, _ ->
+                for (f in externalPrivateTextFiles) {
+                    if (isDebugMode && isDebugModeLoop) {
+                        Log.v(packageNameString, "cleanKml() f:$f")
+                    }
+                    try {
+                        f.delete()
+                    } catch (e: Exception) {
+                        if (isDebugMode) {
+                            Log.e(
+                                packageNameString,
+                                "cleanKml() $e"
+                            )
+                        }
+                    }
+                }
+
+                Toast.makeText(
+                    this,
+                    getStr(R.string.action_kml_cleaned),
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+            .show()
+    }
+
+    private fun listKml() {
+        if (isDebugMode) {
+            Log.v(packageNameString, "listKml()")
+        }
+
+        safContent = ""
+
+        val ioUtil = IoUtil(this)
+        val externalPrivateTextFiles = ioUtil.listExternalPrivateTextFiles()
+        if(externalPrivateTextFiles.isEmpty()){
+            Toast.makeText(
+                this,
+                getStr(R.string.action_kml_list_empty),
+                Toast.LENGTH_LONG
+            ).show()
+
+            return
+        }
+
+        val stringList = mutableListOf<String>()
+        for (f in externalPrivateTextFiles) {
+            stringList.add(f.name)
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle(getStr(R.string.tweet_delete_dialog))
+            .setItems(stringList.toTypedArray()) { _, which ->
+                if (isDebugMode && isDebugModeLoop) {
+                    Log.v(packageNameString, "listKml() externalPrivateTextFiles[$which]: ${externalPrivateTextFiles[which]}")
+                }
+                // AlertDialog.Builder(this)
+                //     .setTitle(getStr(R.string.tweet_delete_dialog))
+                //     .setMessage(stringList[which])
+                //     .setPositiveButton(getStr(R.string.delete_tweet)) { _, _ ->
+                //         stringList[which]
+                //     }
+                //     .show()
+            }
+            .show()
     }
 
     private fun exportKml() {

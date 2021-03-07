@@ -10,6 +10,11 @@
     <item android:title="@string/action_kml">
         <menu>
             <item
+                android:id="@+id/action_kml_list"
+                android:orderInCategory="100"
+                android:title="@string/action_kml_list"
+                app:showAsAction="never" />
+            <item
                 android:id="@+id/action_kml_export"
                 android:orderInCategory="100"
                 android:title="@string/action_kml_export"
