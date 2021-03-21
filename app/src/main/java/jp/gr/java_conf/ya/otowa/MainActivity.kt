@@ -903,8 +903,8 @@ class MainActivity : AppCompatActivity() {
                 Toast.LENGTH_LONG
             ).show()
             return LocationRequest.create().apply {
-                interval = 5000
-                fastestInterval = 1000
+                interval =30_000
+                fastestInterval = 10_000
                 priority = LocationRequest.PRIORITY_HIGH_ACCURACY
             }
         } else {
@@ -914,8 +914,8 @@ class MainActivity : AppCompatActivity() {
                 Toast.LENGTH_LONG
             ).show()
             return LocationRequest.create().apply {
-                interval = 10000
-                fastestInterval = 5000
+                interval = 180_000
+                fastestInterval = 60_000
                 // priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
                 priority = LocationRequest.PRIORITY_HIGH_ACCURACY
             }
