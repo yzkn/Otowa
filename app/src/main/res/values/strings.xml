@@ -102,4 +102,4 @@
     <string name="weather_forecast_base_url_default_ld">http://weather.livedoor.com/forecast/webservice/json/v1/</string>
     <string name="weather_forecast_empty" />
     <string name="weather_summary" />
-</resources>
+</resources><!-- Copyright (c) 2021 YA-androidapp(https://github.com/YA-androidapp) All rights reserved. -->
