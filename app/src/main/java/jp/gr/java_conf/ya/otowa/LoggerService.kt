@@ -16,6 +16,8 @@ import androidx.core.app.NotificationCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.preference.PreferenceManager
 import com.google.android.gms.location.*
+import java.lang.Float
+import java.lang.Long
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -43,6 +45,11 @@ class LoggerService : Service() {
     private var isDebugMode = false
     private var isDebugModeLoop = false
     private var packageNameString = ""
+
+    private val INTERVAL_MS_FAST = 1_000L
+    private val INTERVAL_MS_SLOW = INTERVAL_MS_FAST * 6
+    private val INTERVAL_METERS_FAST = 1F
+    private val INTERVAL_METERS_SLOW = INTERVAL_METERS_FAST * 6
 
     // running status check
     private val localBroadcastManager by lazy { LocalBroadcastManager.getInstance(applicationContext) }
@@ -198,9 +205,50 @@ class LoggerService : Service() {
     }
 
     private fun createLocationRequest(): LocationRequest? {
+        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
+        val locatingIntervalMillisecondsString =
+            sharedPreferences.getString("pref_locating_interval_milliseconds", getString(R.string.locating_interval_milliseconds_default)) ?: getString(R.string.locating_interval_milliseconds_default)
+        val locatingIntervalMetersString =
+            sharedPreferences.getString("pref_locating_interval_meters", getString(R.string.locating_interval_meters_default)) ?: getString(R.string.locating_interval_meters_default)
+
+        var locatingIntervalMilliseconds = 10_000L
+        if (locatingIntervalMillisecondsString != "") {
+            try {
+                locatingIntervalMilliseconds = Long.parseLong(locatingIntervalMillisecondsString)
+            } catch (e: Exception) {
+                if (isDebugMode) {
+                    Log.e(
+                        packageNameString,
+                        "LoggerService createLocationRequest() locatingIntervalMillisecondsString: $locatingIntervalMillisecondsString $e"
+                    )
+                }
+            }
+        }
+        var locatingIntervalMeters = 5F
+        if (locatingIntervalMetersString != "") {
+            try {
+                locatingIntervalMeters = Float.parseFloat(locatingIntervalMetersString + "F")
+            } catch (e: Exception) {
+                if (isDebugMode) {
+                    Log.e(
+                        packageNameString,
+                        "LoggerService createLocationRequest() locatingIntervalMetersString: $locatingIntervalMetersString $e"
+                    )
+                }
+            }
+        }
+
+        if (isDebugMode) {
+            Log.v(
+                packageNameString,
+                "LoggerService createLocationRequest() locatingIntervalMeters: $locatingIntervalMeters locatingIntervalMilliseconds: $locatingIntervalMilliseconds"
+            )
+        }
+
         return LocationRequest.create()?.apply {
-            interval = 1000
-            fastestInterval = 1000
+            interval = locatingIntervalMilliseconds
+            fastestInterval = locatingIntervalMilliseconds
+            smallestDisplacement = locatingIntervalMeters
             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         }
     }

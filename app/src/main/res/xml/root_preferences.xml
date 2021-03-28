@@ -52,10 +52,20 @@
         app:title="@string/locating">
 
         <EditTextPreference
+            android:defaultValue="@string/locating_interval_milliseconds_default"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            app:key="pref_locating_interval_milliseconds"
+            app:summary="@string/locating_interval_milliseconds_summary"
+            app:title="@string/locating_interval_milliseconds"
+            app:useSimpleSummaryProvider="true" />
+
+        <EditTextPreference
             android:defaultValue="@string/locating_error_default"
             android:selectAllOnFocus="false"
             android:singleLine="true"
             app:key="pref_locating_error"
+            app:summary="@string/locating_error_summary"
             app:title="@string/locating_error"
             app:useSimpleSummaryProvider="true" />
 

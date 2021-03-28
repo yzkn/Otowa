@@ -6,12 +6,9 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.net.*
-import android.os.BatteryManager
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -60,6 +57,8 @@ class MainActivity : AppCompatActivity() {
     private var packageNameString = ""
     private var updatedCount = 0
 
+    private val INTERVAL_MILLISECONDS = 1_000L
+    private val INTERVAL_METERS = 0F
     private val WRITE_REQUEST_CODE = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -698,17 +697,18 @@ class MainActivity : AppCompatActivity() {
         val textviewSpeedLabel = findViewById<TextView>(R.id.textview_speed_label)
 
         if (textviewSpeed != null) {
-            var speedString = "!!!"
+            val speedKmh = speed * 3600 / 1000
+            var speedKmhString = "!!!"
             try {
-                speedString = "%03.0f".format(speed * 3600 / 1000) // km/h
+                speedKmhString = "%03.0f".format(speedKmh) // m/s => km/h
             } catch (e: Exception) {
                 if (isDebugMode) {
                     Log.v(packageNameString, "updateSpeedMeter() e: $e")
                 }
             }
-            textviewSpeed.text = speedString
+            textviewSpeed.text = speedKmhString
 
-            if (speed >= 10) {
+            if (speedKmh >= 10) {
                 textviewSpeed.visibility = View.VISIBLE
                 textviewSpeedLabel.visibility = View.VISIBLE
             } else {
@@ -716,12 +716,16 @@ class MainActivity : AppCompatActivity() {
                 textviewSpeedLabel.visibility = View.INVISIBLE
             }
 
-            if (speed > 120) {
-                textviewSpeed.setTextColor(Color.RED)
-            } else if (speed > 80) {
-                textviewSpeed.setTextColor(Color.rgb(255, 128, 0))
-            } else {
-                textviewSpeed.setTextColor(Color.BLACK)
+            when {
+                speedKmh > 120 -> {
+                    textviewSpeed.setTextColor(Color.RED)
+                }
+                speedKmh > 80 -> {
+                    textviewSpeed.setTextColor(Color.rgb(255, 128, 0))
+                }
+                else -> {
+                    textviewSpeed.setTextColor(Color.BLACK)
+                }
             }
         }
     }
@@ -792,17 +796,8 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
-        val batteryInfo: Intent = registerReceiver(
-            null, IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-        ) ?: return
-
         stopLocationUpdates()
-        when (batteryInfo.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)) {
-            BatteryManager.BATTERY_PLUGGED_AC, BatteryManager.BATTERY_PLUGGED_USB, BatteryManager.BATTERY_PLUGGED_WIRELESS -> startLocationUpdates(
-                true
-            )
-            else -> startLocationUpdates(false)
-        }
+        startLocationUpdates()
 
         startNetworkCallback()
     }
@@ -861,8 +856,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun startLocationUpdates(acc: Boolean) {
-        val locationRequest = createLocationRequest(acc) ?: return
+    private fun startLocationUpdates() {
+        val locationRequest = createLocationRequest() ?: return
         if (ActivityCompat.checkSelfPermission(
                 this,
                 ACCESS_FINE_LOCATION
@@ -895,30 +890,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun createLocationRequest(acc: Boolean): LocationRequest? {
-        if (acc) {
-            Toast.makeText(
-                this,
-                getStr(R.string.location_request_highacc),
-                Toast.LENGTH_LONG
-            ).show()
-            return LocationRequest.create().apply {
-                interval =30_000
-                fastestInterval = 10_000
-                priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-            }
-        } else {
-            Toast.makeText(
-                this,
-                getStr(R.string.location_request_lowacc),
-                Toast.LENGTH_LONG
-            ).show()
-            return LocationRequest.create().apply {
-                interval = 180_000
-                fastestInterval = 60_000
-                // priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
-                priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-            }
+    private fun createLocationRequest(): LocationRequest? {
+        return LocationRequest.create().apply {
+            interval = INTERVAL_MILLISECONDS
+            fastestInterval = INTERVAL_MILLISECONDS
+            smallestDisplacement = INTERVAL_METERS
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         }
     }
 
