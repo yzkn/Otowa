@@ -8,6 +8,7 @@ import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.Intent.ACTION_SEND
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.IBinder
@@ -142,12 +143,17 @@ class LoggerService : Service() {
         val openIntent = Intent(this, MainActivity::class.java).let {
             PendingIntent.getActivity(this, 0, it, 0)
         }
+        val sendIntent = Intent(this, LoggerBroadcastReceiver::class.java).apply {
+            action = ACTION_SEND
+        }
+        val sendPendingIntent = PendingIntent.getBroadcast(this, 0, sendIntent, 0)
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(getString(R.string.app_name))
             .setContentText(getString(R.string.logging_enabled))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(openIntent)
+            .addAction(android.R.drawable.ic_menu_mylocation, getString(R.string.tweet), sendPendingIntent)
             .build()
 
         startForeground(ONGOING_NOTIFICATION_ID, notification)

@@ -44,6 +44,12 @@
             android:name=".LoggerService"
             android:enabled="true"
             android:exported="true" />
+        <receiver android:name=".LoggerBroadcastReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="jp.gr.java_conf.ya.otowa.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest><!-- Copyright (c) 2021 YA-androidapp(https://github.com/YA-androidapp) All rights reserved. -->
