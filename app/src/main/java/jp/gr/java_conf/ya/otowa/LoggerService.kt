@@ -8,13 +8,13 @@ import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.Intent.ACTION_SEND
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
+import androidx.core.app.RemoteInput
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.preference.PreferenceManager
 import com.google.android.gms.location.*
@@ -27,6 +27,7 @@ import java.util.*
 
 class LoggerService : Service() {
     companion object {
+        const val INPUT_TWEET = "INPUT_TWEET"
         const val CHANNEL_ID = "1"
         const val ONGOING_NOTIFICATION_ID = 1
 
@@ -108,7 +109,8 @@ class LoggerService : Service() {
                             }
                         } else {
                             // km/h
-                            val speedString = if (location.speed >= 10) "%03.1f".format(location.speed * 3600 / 1000) else "000.0"
+                            val speedString =
+                                if (location.speed >= 10) "%03.1f".format(location.speed * 3600 / 1000) else "000.0"
 
                             if (isDebugMode && isDebugModeLoop) {
                                 Log.v(
@@ -140,20 +142,40 @@ class LoggerService : Service() {
             }
         }
 
+        //
         val openIntent = Intent(this, MainActivity::class.java).let {
             PendingIntent.getActivity(this, 0, it, 0)
         }
-        val sendIntent = Intent(this, LoggerBroadcastReceiver::class.java).apply {
-            action = ACTION_SEND
+        //
+        val locatePendingIntent = Intent("jp.gr.java_conf.ya.otowa.NOTIFICATION_LOCATE").let {
+            PendingIntent.getBroadcast(this, 0, it, 0)
         }
-        val sendPendingIntent = PendingIntent.getBroadcast(this, 0, sendIntent, 0)
+        //
+        val remoteIntent = Intent("jp.gr.java_conf.ya.otowa.NOTIFICATION_REMOTE").let {
+            PendingIntent.getBroadcast(this, 0, it, 0)
+        }
+        val remoteInput = RemoteInput.Builder(INPUT_TWEET).run {
+            setLabel(getString(R.string.tweet))
+            build()
+        }
+        val remoteAction = NotificationCompat.Action.Builder(
+            android.R.drawable.ic_menu_send,
+            getString(R.string.tweet_from_remote),
+            remoteIntent
+        ).addRemoteInput(remoteInput).build()
+
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle(getString(R.string.app_name))
-            .setContentText(getString(R.string.logging_enabled))
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .addAction(
+                android.R.drawable.ic_menu_mylocation,
+                getString(R.string.tweet_from_notification),
+                locatePendingIntent
+            )
+            .addAction(remoteAction)
             .setContentIntent(openIntent)
-            .addAction(android.R.drawable.ic_menu_mylocation, getString(R.string.tweet), sendPendingIntent)
+            .setContentText(getString(R.string.logging_enabled))
+            .setContentTitle(getString(R.string.app_name))
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setSmallIcon(R.mipmap.ic_launcher)
             .build()
 
         startForeground(ONGOING_NOTIFICATION_ID, notification)
@@ -214,9 +236,15 @@ class LoggerService : Service() {
     private fun createLocationRequest(): LocationRequest? {
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
         val locatingIntervalMillisecondsString =
-            sharedPreferences.getString("pref_locating_interval_milliseconds", getString(R.string.locating_interval_milliseconds_default)) ?: getString(R.string.locating_interval_milliseconds_default)
+            sharedPreferences.getString(
+                "pref_locating_interval_milliseconds",
+                getString(R.string.locating_interval_milliseconds_default)
+            ) ?: getString(R.string.locating_interval_milliseconds_default)
         val locatingIntervalMetersString =
-            sharedPreferences.getString("pref_locating_interval_meters", getString(R.string.locating_interval_meters_default)) ?: getString(R.string.locating_interval_meters_default)
+            sharedPreferences.getString(
+                "pref_locating_interval_meters",
+                getString(R.string.locating_interval_meters_default)
+            ) ?: getString(R.string.locating_interval_meters_default)
 
         var locatingIntervalMilliseconds = 10_000L
         if (locatingIntervalMillisecondsString != "") {
@@ -252,7 +280,7 @@ class LoggerService : Service() {
             )
         }
 
-        return LocationRequest.create()?.apply {
+        return LocationRequest.create().apply {
             interval = locatingIntervalMilliseconds
             fastestInterval = locatingIntervalMilliseconds
             smallestDisplacement = locatingIntervalMeters

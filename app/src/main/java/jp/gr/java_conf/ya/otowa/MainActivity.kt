@@ -5,8 +5,10 @@ import android.Manifest.permission.*
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.net.*
@@ -19,6 +21,7 @@ import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.app.RemoteInput
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.beust.klaxon.Klaxon
@@ -42,6 +45,7 @@ import java.util.*
 class MainActivity : AppCompatActivity() {
     private companion object {
         private const val PERMISSION_REQUEST_CODE = 1000
+        var instance: MainActivity? = null
     }
 
     private lateinit var cityDbController: AppDBController
@@ -62,6 +66,7 @@ class MainActivity : AppCompatActivity() {
     private val INTERVAL_METERS = 0F
     private val WRITE_REQUEST_CODE = 1
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -80,6 +85,15 @@ class MainActivity : AppCompatActivity() {
         }
 
         // 通知
+        instance = this
+        this.applicationContext.registerReceiver(
+            NotificationClickedBroadcastReceiver(),
+            IntentFilter("jp.gr.java_conf.ya.otowa.NOTIFICATION_LOCATE")
+        )
+        this.applicationContext.registerReceiver(
+            NotificationRemoteBroadcastReceiver(),
+            IntentFilter("jp.gr.java_conf.ya.otowa.NOTIFICATION_REMOTE")
+        )
         createNotificationChannel()
 
         // CSVの読み取り
@@ -436,21 +450,21 @@ class MainActivity : AppCompatActivity() {
                     )
                     if (results.isNotEmpty()) {
                         val distance = results[0].toDouble()
-                         if (isDebugMode && isDebugModeLoop) {
-                             Log.v(
-                                 packageNameString,
-                                 "updateWeatherReportLabel() city: ${area.city} distance: $distance"
-                             )
-                         }
+                        if (isDebugMode && isDebugModeLoop) {
+                            Log.v(
+                                packageNameString,
+                                "updateWeatherReportLabel() city: ${area.city} distance: $distance"
+                            )
+                        }
                         if (distance <= minDistance) {
                             minDistance = distance
                             nearestArea = area
-                             if (isDebugMode && isDebugModeLoop) {
-                                 Log.v(
-                                     packageNameString,
-                                     "updateWeatherReportLabel() NearestArea city: ${area.city} distance: $distance minDistance: $minDistance"
-                                 )
-                             }
+                            if (isDebugMode && isDebugModeLoop) {
+                                Log.v(
+                                    packageNameString,
+                                    "updateWeatherReportLabel() NearestArea city: ${area.city} distance: $distance minDistance: $minDistance"
+                                )
+                            }
                         }
                     }
                 } catch (e: Exception) {
@@ -533,7 +547,7 @@ class MainActivity : AppCompatActivity() {
                                             lifecycleScope.launch(Dispatchers.Default) {
                                                 withContext(Dispatchers.Main) {
                                                     // アイコンを設定
-                                                    if(forecast.forecasts[0].image?.url != null) {
+                                                    if (forecast.forecasts[0].image?.url != null) {
                                                         if (!::imageWeather.isInitialized) {
                                                             imageWeather =
                                                                 findViewById<ImageButton>(R.id.image_weather)
@@ -550,7 +564,10 @@ class MainActivity : AppCompatActivity() {
                                                             GlideToVectorYou
                                                                 .init()
                                                                 .with(applicationContext)
-                                                                .load(Uri.parse(forecast.forecasts[0].image!!.url), imageWeather)
+                                                                .load(
+                                                                    Uri.parse(forecast.forecasts[0].image!!.url),
+                                                                    imageWeather
+                                                                )
                                                         }
                                                     }
 
@@ -1020,9 +1037,12 @@ class MainActivity : AppCompatActivity() {
 
         AlertDialog.Builder(this)
             .setTitle(getStr(R.string.kml_clean_dialog) + "" + getStr(R.string.kml_clean_message))
-            .setItems(stringList.toTypedArray()) {_, which ->
+            .setItems(stringList.toTypedArray()) { _, which ->
                 if (isDebugMode && isDebugModeLoop) {
-                    Log.v(packageNameString, "cleanKml() externalPrivateTextFiles[$which]: ${externalPrivateTextFiles[which]}")
+                    Log.v(
+                        packageNameString,
+                        "cleanKml() externalPrivateTextFiles[$which]: ${externalPrivateTextFiles[which]}"
+                    )
                 }
                 try {
                     externalPrivateTextFiles[which].delete()
@@ -1076,7 +1096,7 @@ class MainActivity : AppCompatActivity() {
 
         val ioUtil = IoUtil(this)
         val externalPrivateTextFiles = ioUtil.listExternalPrivateTextFiles()
-        if(externalPrivateTextFiles.isEmpty()){
+        if (externalPrivateTextFiles.isEmpty()) {
             Toast.makeText(
                 this,
                 getStr(R.string.action_kml_list_empty),
@@ -1095,7 +1115,10 @@ class MainActivity : AppCompatActivity() {
             .setTitle(getStr(R.string.tweet_delete_dialog))
             .setItems(stringList.toTypedArray()) { _, which ->
                 if (isDebugMode && isDebugModeLoop) {
-                    Log.v(packageNameString, "listKml() externalPrivateTextFiles[$which]: ${externalPrivateTextFiles[which]}")
+                    Log.v(
+                        packageNameString,
+                        "listKml() externalPrivateTextFiles[$which]: ${externalPrivateTextFiles[which]}"
+                    )
                 }
                 // AlertDialog.Builder(this)
                 //     .setTitle(getStr(R.string.tweet_delete_dialog))
@@ -1117,7 +1140,7 @@ class MainActivity : AppCompatActivity() {
 
         val ioUtil = IoUtil(this)
         val externalPrivateTextFiles = ioUtil.listExternalPrivateTextFiles()
-        if(externalPrivateTextFiles.isEmpty()){
+        if (externalPrivateTextFiles.isEmpty()) {
             Toast.makeText(
                 this,
                 getStr(R.string.action_kml_export_empty),
@@ -1164,7 +1187,7 @@ class MainActivity : AppCompatActivity() {
                     )
                 }
 
-                if(row !="") {
+                if (row != "") {
                     if (row.split(",").size == 5) {
 
                         if (0 == pointNumber) {
@@ -1297,7 +1320,12 @@ $pathsCoordinatesString
         val dateString = sdfFyyyyMMddHH.format(date)
         val filenameHeader = "Route${dateString}_"
 
-        saveExternalPublicTextFile(filenameHeader + concatFilename.substring(0, concatFilename.length - 1) + ".kml")
+        saveExternalPublicTextFile(
+            filenameHeader + concatFilename.substring(
+                0,
+                concatFilename.length - 1
+            ) + ".kml"
+        )
         safContent = sbFileContent.toString()
     }
 
@@ -1331,4 +1359,30 @@ $pathsCoordinatesString
             }
         }
     }
+
+    class NotificationClickedBroadcastReceiver : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (instance != null && instance is MainActivity) {
+                val buttonLocate = instance!!.findViewById<Button>(R.id.button_locate)
+                buttonLocate.performLongClick()
+            }
+        }
+    }
+
+    class NotificationRemoteBroadcastReceiver : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (instance != null && instance is MainActivity) {
+                val remoteText = RemoteInput.getResultsFromIntent(intent)
+                    ?.getCharSequence(LoggerService.INPUT_TWEET)
+                if (remoteText != null && remoteText.isNotEmpty()) {
+                    val tweetMain = instance!!.findViewById<EditText>(R.id.tweet_main)
+                    tweetMain.setText(remoteText)
+                    val iconImage = instance!!.findViewById<ImageButton>(R.id.icon_image)
+                    iconImage.performClick()
+                }
+            }
+        }
+    }
+
+
 }

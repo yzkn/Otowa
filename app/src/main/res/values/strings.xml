@@ -94,6 +94,8 @@
     <string name="title_activity_settings">SettingsActivity</string>
     <string name="tweet">Tweet</string>
     <string name="tweet_delete_dialog">Delete my tweet</string>
+    <string name="tweet_from_notification"> -- Tweet your current location -- </string>
+    <string name="tweet_from_remote"> -- Tweet something -- </string>
     <string name="tweeted">Tweeted: </string>
     <string name="weather">Weather</string>
     <string name="weather_forecast">⛅</string>
