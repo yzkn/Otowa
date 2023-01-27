@@ -386,6 +386,11 @@ class MainActivity : AppCompatActivity() {
             buttonLocate.textSize = 14F
             buttonLocate.text = getStr(R.string.locate)
         }
+
+        val buttonTweetLocation = findViewById<Button>(R.id.button_tweet_location)
+        if (buttonTweetLocation != null) {
+            buttonTweetLocation.isEnabled = false
+        }
     }
 
     @SuppressLint("SetTextI18n")
@@ -416,6 +421,11 @@ class MainActivity : AppCompatActivity() {
             } else {
                 buttonLocate.text = getStr(R.string.locate)
             }
+        }
+
+        val buttonTweetLocation = findViewById<Button>(R.id.button_tweet_location)
+        if (buttonTweetLocation != null) {
+            buttonTweetLocation.isEnabled = true
         }
     }
 

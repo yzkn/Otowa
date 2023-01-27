@@ -121,8 +121,8 @@
                 android:id="@+id/button_tweet_location"
                 android:layout_width="192dp"
                 android:layout_height="match_parent"
+                android:enabled="false"
                 android:text="@string/button_tweet_location"
-                app:backgroundTint="#ff0099cc"
                 tools:ignore="ButtonStyle" />
 
             <Button

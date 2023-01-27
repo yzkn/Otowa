@@ -42,8 +42,6 @@ import twitter4j.TwitterException
 import twitter4j.TwitterFactory
 import twitter4j.conf.ConfigurationBuilder
 import java.lang.Double.parseDouble
-import java.lang.Integer.max
-import java.lang.Integer.min
 
 
 /**
@@ -105,7 +103,20 @@ class FirstFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_first, container, false)
+        val view = inflater.inflate(R.layout.fragment_first, container, false)
+        view.setOnKeyListener { v, keyCode, event ->
+            if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
+                reverseGeocode(true)
+
+                playSound(loadedSoundNotify)
+                true
+            } else {
+                false
+            }
+        }
+        view.isFocusableInTouchMode = true
+        view.requestFocus()
+        return view
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
