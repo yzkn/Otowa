@@ -29,9 +29,7 @@
     <string name="auth_consumer_secret">Consumer secret</string>
     <string name="auth_consumer_secret_default">Default consumer secret</string>
     <string name="auth_summary">Information required for authentication</string>
-    <string name="button_volume_dec" tools:ignore="TypographyDashes">Vol--</string>
-    <string name="button_volume_inc">Vol++</string>
-    <string name="button_volume_max">max</string>
+    <string name="button_tweet_location">Tweet location</string>
     <string name="clean_all_kmls">Remove all KML files</string>
     <string name="clear">Clear</string>
     <string name="clock_8888">88:88</string>

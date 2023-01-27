@@ -207,9 +207,7 @@ class FirstFragment : Fragment() {
                 val buttonClear = createdView.findViewById<Button>(R.id.button_clear)
                 val buttonLocate = createdView.findViewById<Button>(R.id.button_locate)
 
-                val buttonVolumeDec = createdView.findViewById<Button>(R.id.button_volume_dec)
-                val buttonVolumeInc = createdView.findViewById<Button>(R.id.button_volume_inc)
-                val buttonVolumeMax = createdView.findViewById<Button>(R.id.button_volume_max)
+                val buttonTweetLocation = createdView.findViewById<Button>(R.id.button_tweet_location)
 
                 // EditText群に対して設定
                 val editTextList = arrayOf(
@@ -262,12 +260,6 @@ class FirstFragment : Fragment() {
 
                     playSound(loadedSoundNotify)
                 }
-                buttonLocate.setOnLongClickListener {
-                    reverseGeocode(true)
-
-                    playSound(loadedSoundNotify)
-                    true
-                }
                 iconImage.setOnClickListener {
                     createdView.findViewById<ImageButton>(R.id.icon_image).isEnabled = false
 
@@ -313,25 +305,12 @@ class FirstFragment : Fragment() {
                     true
                 }
 
-                buttonVolumeDec.setOnClickListener {
-                    volumeDecrease()
-                }
-                buttonVolumeDec.setOnLongClickListener {
-                    volumeDecrease(5)
-                    true
-                }
-                buttonVolumeInc.setOnClickListener {
-                    volumeIncrease()
-                }
-                buttonVolumeInc.setOnLongClickListener {
-                    volumeIncrease(5)
-                    true
-                }
-                buttonVolumeMax.setOnClickListener {
-                    volumeMax()
+                buttonTweetLocation.setOnClickListener {
+                    reverseGeocode(true)
+
+                    playSound(loadedSoundNotify)
                 }
 
-                checkVolume()
                 changeScreenBrightness()
                 initializeSensors()
                 initializeLoggingButton()
@@ -458,83 +437,6 @@ class FirstFragment : Fragment() {
                     )
                 }
             }
-        }
-    }
-
-    private fun checkVolume() {
-        if (::audioManager.isInitialized) {
-            val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-            val minVolume = audioManager.getStreamMinVolume(AudioManager.STREAM_MUSIC)
-            val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-            if (isDebugMode) {
-                Log.v(
-                    packageNameString,
-                    "checkVolume() currentVolume: $currentVolume minVolume: $minVolume maxVolume: $maxVolume"
-                )
-            }
-
-            val buttonVolumeDec = createdView.findViewById<Button>(R.id.button_volume_dec)
-            val buttonVolumeInc = createdView.findViewById<Button>(R.id.button_volume_inc)
-            val buttonVolumeMax = createdView.findViewById<Button>(R.id.button_volume_max)
-            when (currentVolume) {
-                minVolume -> {
-                    buttonVolumeDec.isEnabled = false
-                    buttonVolumeInc.isEnabled = true
-                    buttonVolumeMax.isEnabled = true
-                }
-                maxVolume -> {
-                    buttonVolumeDec.isEnabled = true
-                    buttonVolumeInc.isEnabled = false
-                    buttonVolumeMax.isEnabled = false
-                }
-                else -> {
-                    buttonVolumeDec.isEnabled = true
-                    buttonVolumeInc.isEnabled = true
-                    buttonVolumeMax.isEnabled = true
-                }
-            }
-        }
-    }
-
-    private fun volumeDecrease(diff: Int = 1) {
-        if (isDebugMode) {
-            Log.v(packageNameString, "volumeDecrease() diff: $diff")
-        }
-
-        if (::audioManager.isInitialized) {
-            val minVolume = audioManager.getStreamMinVolume(AudioManager.STREAM_MUSIC)
-            val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-            audioManager.setStreamVolume(
-                AudioManager.STREAM_MUSIC,
-                max(currentVolume - diff, minVolume),
-                0
-            )
-            checkVolume()
-        }
-    }
-
-    private fun volumeIncrease(diff: Int = 1) {
-        if (isDebugMode) {
-            Log.v(packageNameString, "volumeIncrease() diff: $diff")
-        }
-
-        if (::audioManager.isInitialized) {
-            val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-            val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-            audioManager.setStreamVolume(
-                AudioManager.STREAM_MUSIC,
-                min(currentVolume + diff, maxVolume),
-                0
-            )
-            checkVolume()
-        }
-    }
-
-    private fun volumeMax() {
-        if (::audioManager.isInitialized) {
-            val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, maxVolume, 0)
-            checkVolume()
         }
     }
 

@@ -118,32 +118,17 @@
             android:orientation="horizontal">
 
             <Button
-                android:id="@+id/button_volume_dec"
-                android:layout_width="96dp"
+                android:id="@+id/button_tweet_location"
+                android:layout_width="192dp"
                 android:layout_height="match_parent"
-                android:text="@string/button_volume_dec"
-                app:backgroundTint="#ff0099cc"
-                tools:ignore="ButtonStyle" />
-
-            <Button
-                android:id="@+id/button_volume_inc"
-                android:layout_width="96dp"
-                android:layout_height="match_parent"
-                android:text="@string/button_volume_inc"
-                app:backgroundTint="#ff0099cc"
-                tools:ignore="ButtonStyle" />
-
-            <Button
-                android:id="@+id/button_volume_max"
-                android:layout_width="96dp"
-                android:layout_height="match_parent"
-                android:text="@string/button_volume_max"
+                android:text="@string/button_tweet_location"
                 app:backgroundTint="#ff0099cc"
                 tools:ignore="ButtonStyle" />
 
             <Button
                 android:id="@+id/button_logging"
-                android:layout_width="96dp"
+                android:layout_marginLeft="8dp"
+                android:layout_width="192dp"
                 android:layout_height="match_parent"
                 android:text="@string/logging_start"
                 android:textSize="12sp"

@@ -38,6 +38,7 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+    namespace 'jp.gr.java_conf.ya.otowa'
 }
 
 // DB
@@ -72,7 +73,8 @@ dependencies {
 
     // Image
     implementation 'com.squareup.picasso:picasso:2.71828'
-    implementation 'com.github.corouteam:GlideToVectorYou:v2.0.0'
+    // implementation 'com.github.corouteam:GlideToVectorYou:v2.0.0'
+    implementation 'com.github.2coffees1team:GlideToVectorYou:v2.0.0'
 
     // DB
     implementation 'com.github.abnerescocio:assets-sqlite:1.4.1'
