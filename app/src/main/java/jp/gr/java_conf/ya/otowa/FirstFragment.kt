@@ -116,6 +116,24 @@ class FirstFragment : Fragment() {
         initDb()
     }
 
+    override fun onResume() {
+        super.onResume()
+
+        requireView().isFocusableInTouchMode = true
+        requireView().requestFocus()
+        requireView().setOnKeyListener { v: View?, keyCode: Int, event: KeyEvent? ->
+
+                if (event?.action == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
+                    reverseGeocode(true)
+
+                    playSound(loadedSoundNotify)
+                    true
+                } else {
+                    false
+                }
+        }
+    }
+
     override fun onDestroy() {
         soundPool.release()
 
