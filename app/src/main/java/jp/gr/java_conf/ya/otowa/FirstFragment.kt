@@ -103,20 +103,7 @@ class FirstFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        val view = inflater.inflate(R.layout.fragment_first, container, false)
-        view.setOnKeyListener { v, keyCode, event ->
-            if (event.action == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
-                reverseGeocode(true)
-
-                playSound(loadedSoundNotify)
-                true
-            } else {
-                false
-            }
-        }
-        view.isFocusableInTouchMode = true
-        view.requestFocus()
-        return view
+        return inflater.inflate(R.layout.fragment_first, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -808,7 +795,7 @@ class FirstFragment : Fragment() {
     }
 
     @SuppressLint("SetTextI18n")
-    private fun reverseGeocode(direct: Boolean = false) {
+    public fun reverseGeocode(direct: Boolean = false) {
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
         val latString = sharedPreferences.getString("pref_current_latitude", "") ?: ""
         val lngString = sharedPreferences.getString("pref_current_longitude", "") ?: ""
@@ -862,6 +849,7 @@ class FirstFragment : Fragment() {
                                     ).show()
                                 }else{
                                     updateTweet(tweetText)
+                                    playSound(loadedSoundNotify)
                                 }
                                 preTweetedText = tweetText
                             } else {
@@ -879,6 +867,7 @@ class FirstFragment : Fragment() {
                                     )
                                     mainEditText.requestFocus()
                                     mainEditText.setSelection(mainEditText.text.length)
+                                    playSound(loadedSoundNotify)
                                 }
                             }
                         }
