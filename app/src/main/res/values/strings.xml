@@ -19,16 +19,6 @@
     <string name="app">App</string>
     <string name="app_name">Otowa</string>
     <string name="app_summary">App settings</string>
-    <string name="auth">Auth</string>
-    <string name="auth_access_key">Access key</string>
-    <string name="auth_access_key_default">Default access key</string>
-    <string name="auth_access_secret">Access secret</string>
-    <string name="auth_access_secret_default">Default access secret</string>
-    <string name="auth_consumer_key">Consumer key</string>
-    <string name="auth_consumer_key_default">Default consumer key</string>
-    <string name="auth_consumer_secret">Consumer secret</string>
-    <string name="auth_consumer_secret_default">Default consumer secret</string>
-    <string name="auth_summary">Information required for authentication</string>
     <string name="button_tweet_location">Tweet location</string>
     <string name="clean_all_kmls">Remove all KML files</string>
     <string name="clear">Clear</string>
@@ -102,4 +92,4 @@
     <string name="weather_forecast_base_url_default_ld">http://weather.livedoor.com/forecast/webservice/json/v1/</string>
     <string name="weather_forecast_empty" />
     <string name="weather_summary" />
-</resources><!-- Copyright (c) 2021 YA-androidapp(https://github.com/YA-androidapp) All rights reserved. -->
+</resources><!-- Copyright (c) 2023 YA-androidapp(https://github.com/YA-androidapp) All rights reserved. -->

@@ -8,25 +8,6 @@
     tools:context=".FirstFragment">
 
     <LinearLayout
-        android:id="@+id/linear_layout_first"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <TextView
-            android:id="@+id/textview_first"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/not_logged_in" />
-
-        <Button
-            android:id="@+id/button_first"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/login" />
-    </LinearLayout>
-
-    <LinearLayout
         android:id="@+id/linear_layout_tweet"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -73,14 +54,14 @@
             </LinearLayout>
 
             <ImageButton
+                android:background="@mipmap/ic_launcher"
                 android:id="@+id/icon_image"
                 android:layout_width="96dp"
-                android:layout_height="match_parent"
+                android:layout_height="96dp"
                 android:layout_marginStart="10dp"
                 android:layout_marginTop="10dp"
                 android:layout_marginEnd="10dp"
                 android:layout_marginBottom="10dp"
-                android:background="#ffffffff"
                 android:contentDescription="@string/icon"
                 android:scaleType="fitCenter" />
 
@@ -384,4 +365,4 @@
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
-</LinearLayout><!-- Copyright (c) 2021 YA-androidapp(https://github.com/YA-androidapp) All rights reserved. -->
+</LinearLayout><!-- Copyright (c) 2023 YA-androidapp(https://github.com/YA-androidapp) All rights reserved. -->

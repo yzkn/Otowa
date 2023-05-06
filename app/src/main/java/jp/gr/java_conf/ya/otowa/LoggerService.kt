@@ -1,4 +1,4 @@
-// Copyright (c) 2021 YA-androidapp(https://github.com/YA-androidapp) All rights reserved.
+// Copyright (c) 2023 YA-androidapp(https://github.com/YA-androidapp) All rights reserved.
 package jp.gr.java_conf.ya.otowa
 
 import android.Manifest
@@ -18,8 +18,6 @@ import androidx.core.app.RemoteInput
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.preference.PreferenceManager
 import com.google.android.gms.location.*
-import java.lang.Float
-import java.lang.Long
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -88,9 +86,7 @@ class LoggerService : Service() {
         dfIso.timeZone = tzUtc
 
         locationCallback = object : LocationCallback() {
-            override fun onLocationResult(locationResult: LocationResult?) {
-                locationResult ?: return
-
+            override fun onLocationResult(locationResult: LocationResult) {
                 for (location in locationResult.locations) {
                     try {
                         val strBuf = StringBuilder()
@@ -249,7 +245,7 @@ class LoggerService : Service() {
         var locatingIntervalMilliseconds = 10_000L
         if (locatingIntervalMillisecondsString != "") {
             try {
-                locatingIntervalMilliseconds = Long.parseLong(locatingIntervalMillisecondsString)
+                locatingIntervalMilliseconds = locatingIntervalMillisecondsString.toLong()
             } catch (e: Exception) {
                 if (isDebugMode) {
                     Log.e(
@@ -262,7 +258,7 @@ class LoggerService : Service() {
         var locatingIntervalMeters = 5F
         if (locatingIntervalMetersString != "") {
             try {
-                locatingIntervalMeters = Float.parseFloat(locatingIntervalMetersString + "F")
+                locatingIntervalMeters = (locatingIntervalMetersString + "F").toFloat()
             } catch (e: Exception) {
                 if (isDebugMode) {
                     Log.e(

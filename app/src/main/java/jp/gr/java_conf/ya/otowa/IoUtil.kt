@@ -1,4 +1,4 @@
-// Copyright (c) 2021 YA-androidapp(https://github.com/YA-androidapp) All rights reserved.
+// Copyright (c) 2023 YA-androidapp(https://github.com/YA-androidapp) All rights reserved.
 package jp.gr.java_conf.ya.otowa
 
 import android.content.Context
