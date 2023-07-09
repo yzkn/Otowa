@@ -739,6 +739,8 @@ class FirstFragment : Fragment() {
 
     private fun updateTweet(tweetText: String) {
         if (tweetText != "") {
+            val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
+            bypassTwitter = sharedPreferences.getBoolean("pref_bypass_twitter", false)
             if (bypassTwitter) {
                 // Toast
                 Intent(Intent.ACTION_SEND)
