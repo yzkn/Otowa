@@ -9,6 +9,10 @@
             app:key="pref_bypass_twitter"
             app:title="@string/bypass_twitter" />
 
+        <SwitchPreferenceCompat
+            app:key="pref_explicit_intents_twitter"
+            app:title="@string/explicit_intents_twitter" />
+
         <EditTextPreference
             android:defaultValue="@string/auth_consumer_key_default"
             android:selectAllOnFocus="true"

@@ -20,6 +20,11 @@
                 android:title="@string/action_kml_export"
                 app:showAsAction="never" />
             <item
+                android:id="@+id/action_kml_export_date"
+                android:orderInCategory="100"
+                android:title="@string/action_kml_export_date"
+                app:showAsAction="never" />
+            <item
                 android:id="@+id/action_kml_clean"
                 android:orderInCategory="100"
                 android:title="@string/action_kml_clean"

@@ -52,10 +52,10 @@ class IoUtil(context: Context) {
         }
     }
 
-    fun listExternalPrivateTextFiles(): List<File> {
+    fun listExternalPrivateTextFiles(term: String=""): List<File> {
         if (checkIfExternalStorageIsReadable()) {
             try {
-                val files = baseDirectory?.listFiles()
+                val files = if (term == "") baseDirectory?.listFiles() else baseDirectory?.listFiles()?.filter { it.nameWithoutExtension.startsWith(term) }?.toTypedArray()
                 if (files != null) {
                     Arrays.sort(files)
                     return files.toList()

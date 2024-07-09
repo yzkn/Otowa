@@ -3,6 +3,7 @@
     <string name="action_kml_cleaned">Removed KML files.</string>
     <string name="action_kml_deleted">Delete the KML file</string>
     <string name="action_kml_export">Export KML files</string>
+    <string name="action_kml_export_date">Export KML files of target date</string>
     <string name="action_kml_export_empty">No KML data saved.</string>
     <string name="action_kml_exporting">Exporting...</string>
     <string name="action_kml_list">List KML file</string>
@@ -42,6 +43,7 @@
     <string name="delete_tweet">Delete</string>
     <string name="deleted">Deleted.</string>
     <string name="duplicated_tweet_text">duplicate text</string>
+    <string name="explicit_intents_twitter">Explicit intents</string>
     <string name="first_fragment_label">First Fragment</string>
     <string name="have_to_long_press_logging_button">Tap and hold to enable or disable logging.</string>
     <string name="hello_first_fragment">Hello first fragment</string>
@@ -56,6 +58,7 @@
     <string name="km_h">km/h</string>
     <string name="kml_clean_dialog">Clean KMLs</string>
     <string name="kml_clean_message">Select a target KML file or tap Remove-all button.</string>
+    <string name="kml_list_dialog">List KMLs</string>
     <string name="locate">Locate</string>
     <string name="locate_unknown">UnLocated</string>
     <string name="locating">Locating</string>

@@ -9,6 +9,7 @@ import android.content.Context.SENSOR_SERVICE
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.content.pm.ResolveInfo
 import android.graphics.Color
 import android.hardware.Sensor
 import android.hardware.SensorEvent
@@ -39,7 +40,9 @@ import twitter4j.Twitter
 import twitter4j.TwitterException
 import twitter4j.TwitterFactory
 import twitter4j.conf.ConfigurationBuilder
+import java.io.UnsupportedEncodingException
 import java.lang.Double.parseDouble
+import java.net.URLEncoder
 
 
 /**
@@ -737,17 +740,65 @@ class FirstFragment : Fragment() {
         }
     }
 
+    private fun urlEncode(s: String): String{
+        return try {
+            URLEncoder.encode(s, "UTF-8")
+        }catch (e: UnsupportedEncodingException){
+            ""
+        }
+    }
+
     private fun updateTweet(tweetText: String) {
         if (tweetText != "") {
             val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
             bypassTwitter = sharedPreferences.getBoolean("pref_bypass_twitter", false)
             if (bypassTwitter) {
-                // Toast
-                Intent(Intent.ACTION_SEND)
-                    .setType("text/plain")
-                    .putExtra(Intent.EXTRA_TEXT, tweetText)
-                    .let { Intent.createChooser(it, null) }
-                    .also(::startActivity)
+                val explicitIntentsTwitter = sharedPreferences.getBoolean("pref_explicit_intents_twitter", false)
+                if(explicitIntentsTwitter){
+                    val tweetIntent = Intent(Intent.ACTION_SEND)
+                        .putExtra(Intent.EXTRA_TEXT, tweetText)
+                        .setType("text/plain")
+
+                    var resolved = false
+                    try {
+
+                    val packManager: PackageManager? = getActivity()?.getPackageManager()
+                        if(packManager != null) {
+                            val resolvedInfoList: List<ResolveInfo> =
+                                packManager!!.queryIntentActivities(
+                                    tweetIntent,
+                                    PackageManager.MATCH_DEFAULT_ONLY
+                                )
+
+                            for (resolveInfo in resolvedInfoList) {
+                                if (resolveInfo.activityInfo.packageName.startsWith("com.twitter.android")) {
+                                    tweetIntent.setClassName(
+                                        resolveInfo.activityInfo.packageName,
+                                        resolveInfo.activityInfo.name
+                                    )
+                                    resolved = true
+                                    break
+                                }
+                            }
+                        }
+                    } catch (e: Exception) {
+                    }
+
+                    if (resolved) {
+                        startActivity(tweetIntent)
+                    } else {
+                        val i = Intent().putExtra(Intent.EXTRA_TEXT, tweetText)
+                            .setAction(Intent.ACTION_VIEW)
+                            .setData(Uri.parse("https://twitter.com/intent/tweet?text=" + urlEncode(tweetText)))
+                        startActivity(i)
+                    }
+                }else {
+                    Intent(Intent.ACTION_SEND)
+                        .setType("text/plain")
+                        .putExtra(Intent.EXTRA_TEXT, tweetText)
+                        .let { Intent.createChooser(it, null) }
+                        .also(::startActivity)
+                }
             } else {
                 viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
                     withContext(Dispatchers.IO) {

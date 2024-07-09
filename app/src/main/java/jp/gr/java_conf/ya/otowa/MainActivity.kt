@@ -114,6 +114,22 @@ class MainActivity : AppCompatActivity() {
         }
 
         initDb()
+        checkPackages()
+    }
+
+    private fun checkPackages() {
+        val pm: PackageManager = getPackageManager()
+        val pckInfoList =
+            pm.getInstalledPackages(PackageManager.GET_ACTIVITIES or PackageManager.GET_SERVICES)
+        for (pckInfo in pckInfoList) {
+            if (pm.getLaunchIntentForPackage(pckInfo.packageName) != null) {
+                val packageName = pckInfo.packageName
+                val className =
+                    pm.getLaunchIntentForPackage(pckInfo.packageName)!!.component!!
+                        .className + ""
+                Log.i(packageNameString, packageName + "\t" + className)
+            }
+        }
     }
 
     private fun createNotificationChannel() {
@@ -815,6 +831,10 @@ class MainActivity : AppCompatActivity() {
                 exportKml()
                 return true
             }
+            R.id.action_kml_export_date -> {
+                exportKmlDate()
+                return true
+            }
             R.id.action_kml_clean -> {
                 cleanKml()
                 return true
@@ -1124,7 +1144,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         AlertDialog.Builder(this)
-            .setTitle(getStr(R.string.tweet_delete_dialog))
+            .setTitle(getStr(R.string.kml_list_dialog))
             .setItems(stringList.toTypedArray()) { _, which ->
                 if (isDebugMode && isDebugModeLoop) {
                     Log.v(
@@ -1132,18 +1152,11 @@ class MainActivity : AppCompatActivity() {
                         "listKml() externalPrivateTextFiles[$which]: ${externalPrivateTextFiles[which]}"
                     )
                 }
-                // AlertDialog.Builder(this)
-                //     .setTitle(getStr(R.string.tweet_delete_dialog))
-                //     .setMessage(stringList[which])
-                //     .setPositiveButton(getStr(R.string.delete_tweet)) { _, _ ->
-                //         stringList[which]
-                //     }
-                //     .show()
             }
             .show()
     }
 
-    private fun exportKml() {
+    private fun exportKml(term: String="") {
         if (isDebugMode) {
             Log.v(packageNameString, "exportKml()")
         }
@@ -1151,7 +1164,7 @@ class MainActivity : AppCompatActivity() {
         safContent = ""
 
         val ioUtil = IoUtil(this)
-        val externalPrivateTextFiles = ioUtil.listExternalPrivateTextFiles()
+        val externalPrivateTextFiles = ioUtil.listExternalPrivateTextFiles(term)
         if (externalPrivateTextFiles.isEmpty()) {
             Toast.makeText(
                 this,
@@ -1320,25 +1333,76 @@ $pathsCoordinatesString
         )
 
         val concatFilename = sbFileName.toString()
-        if (isDebugMode) {
-            Log.v(
-                packageNameString,
-                "exportKml() reverseGeocode concatFilename: $concatFilename"
+        if(concatFilename != "") {
+            if (isDebugMode) {
+                Log.v(
+                    packageNameString,
+                    "exportKml() reverseGeocode concatFilename: $concatFilename"
+                )
+            }
+
+            val date = Date()
+            val sdfFyyyyMMddHH = SimpleDateFormat("yyyyMMddHHmmss", Locale.JAPAN)
+            val dateString = sdfFyyyyMMddHH.format(date)
+            val filenameHeader = "Route${dateString}_"
+
+            saveExternalPublicTextFile(
+                filenameHeader + concatFilename.substring(
+                    0,
+                    concatFilename.length - 1
+                ) + ".kml"
             )
+            safContent = sbFileContent.toString()
+        }
+    }
+
+    private fun exportKmlDate() {
+        if (isDebugMode) {
+            Log.v(packageNameString, "exportKmlDate()")
         }
 
-        val date = Date()
-        val sdfFyyyyMMddHH = SimpleDateFormat("yyyyMMddHHmmss", Locale.JAPAN)
-        val dateString = sdfFyyyyMMddHH.format(date)
-        val filenameHeader = "Route${dateString}_"
+        val ioUtil = IoUtil(this)
+        val externalPrivateTextFiles = ioUtil.listExternalPrivateTextFiles()
+        if (externalPrivateTextFiles.isEmpty()) {
+            Toast.makeText(
+                this,
+                getStr(R.string.action_kml_list_empty),
+                Toast.LENGTH_LONG
+            ).show()
 
-        saveExternalPublicTextFile(
-            filenameHeader + concatFilename.substring(
-                0,
-                concatFilename.length - 1
-            ) + ".kml"
-        )
-        safContent = sbFileContent.toString()
+            return
+        }
+
+        var stringList = mutableListOf<String>()
+        for (f in externalPrivateTextFiles) {
+            stringList.add(f.name.substring("Route".length, "RouteyyyyMMdd".length))
+        }
+        stringList = stringList.toSet().toMutableList()
+
+        AlertDialog.Builder(this)
+            .setTitle(getStr(R.string.kml_list_dialog))
+            .setItems(stringList.toTypedArray()) { _, which ->
+                var term = stringList.toTypedArray()[which]
+
+                if (isDebugMode && isDebugModeLoop) {
+                    Log.v(
+                        packageNameString,
+                        "exportKmlDate() stringList.toTypedArray()[$which]: ${term}"
+                    )
+                }
+
+                try {
+                    exportKml("Route$term")
+                } catch (e: Exception) {
+                    if (isDebugMode) {
+                        Log.e(
+                            packageNameString,
+                            "exportKmlDate() $e"
+                        )
+                    }
+                }
+            }
+            .show()
     }
 
     // Storage Access Framework
