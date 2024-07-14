@@ -1068,7 +1068,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         AlertDialog.Builder(this)
-            .setTitle(getStr(R.string.kml_clean_dialog) + "" + getStr(R.string.kml_clean_message))
+            .setTitle(getStr(R.string.kml_clean_dialog) + " " + getStr(R.string.kml_clean_message))
             .setItems(stringList.toTypedArray()) { _, which ->
                 if (isDebugMode && isDebugModeLoop) {
                     Log.v(
@@ -1333,7 +1333,13 @@ $pathsCoordinatesString
         )
 
         val concatFilename = sbFileName.toString()
-        if(concatFilename != "") {
+        if(concatFilename == "") {
+            Toast.makeText(
+                this,
+                getStr(R.string.action_kml_export_empty),
+                Toast.LENGTH_LONG
+            ).show()
+        } else {
             if (isDebugMode) {
                 Log.v(
                     packageNameString,

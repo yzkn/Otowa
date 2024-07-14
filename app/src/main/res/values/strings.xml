@@ -1,7 +1,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="action_kml_clean">Clean KML files</string>
-    <string name="action_kml_cleaned">Removed KML files.</string>
-    <string name="action_kml_deleted">Delete the KML file</string>
+    <string name="action_kml_cleaned">KML files have been deleted.</string>
+    <string name="action_kml_deleted">KML file has been deleted.</string>
     <string name="action_kml_export">Export KML files</string>
     <string name="action_kml_export_date">Export KML files of target date</string>
     <string name="action_kml_export_empty">No KML data saved.</string>
