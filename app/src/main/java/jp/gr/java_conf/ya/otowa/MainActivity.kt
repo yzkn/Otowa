@@ -1299,9 +1299,9 @@ class MainActivity : AppCompatActivity() {
                 )
             }
 
-            //
-            sbFileContent.append(
-                """
+            if(rows.isNotEmpty()) {
+                sbFileContent.append(
+                    """
 			<Folder>
 				<name>Route${"%02d".format(routeNumber)}</name>
 				<Folder>
@@ -1325,7 +1325,8 @@ $pathsCoordinatesString
 				</Placemark>
 			</Folder>
             """.trimIndent()
-            ).append(sep)
+                ).append(sep)
+            }
         }
 
         sbFileContent.append(
