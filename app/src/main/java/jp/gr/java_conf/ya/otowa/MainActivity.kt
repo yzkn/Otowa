@@ -18,6 +18,8 @@ import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -236,7 +238,7 @@ class MainActivity : AppCompatActivity() {
                         Log.v(packageNameString, "locate() 測位ごとに毎回行う")
                     }
 
-                    setLocationViewVisibility(location.hasSpeed() && location.hasAltitude() && location.hasBearing())
+                    setLocationViewVisibility(location.hasSpeed() && ((location.speed * 3600 / 1000) > 80) && location.hasAltitude() && location.hasBearing())
                     updateClock(location.time)
                     if (location.hasAltitude()) {
                         updateAltimeter(location.altitude)
@@ -378,10 +380,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun setLocationViewVisibility(cond: Boolean) {
         val linearLayoutLocation = findViewById<LinearLayout>(R.id.linear_layout_location)
+        val linearLayoutWebview = findViewById<LinearLayout>(R.id.linear_layout_webview)
         if (cond) {
             linearLayoutLocation.visibility = View.VISIBLE
+            linearLayoutWebview.visibility = View.GONE
         } else {
-            linearLayoutLocation.visibility = View.INVISIBLE
+            linearLayoutLocation.visibility = View.GONE
+            linearLayoutWebview.visibility = View.VISIBLE
         }
     }
 

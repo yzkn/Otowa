@@ -25,9 +25,7 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.view.*
-import android.webkit.WebResourceRequest
-import android.webkit.WebView
-import android.webkit.WebViewClient
+import android.webkit.*
 import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -44,6 +42,12 @@ import java.io.UnsupportedEncodingException
 import java.lang.Double.parseDouble
 import java.net.URLEncoder
 
+import android.webkit.GeolocationPermissions.Callback;
+import android.webkit.WebChromeClient;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+
 
 /**
  * A simple [Fragment] subclass as the default destination in the navigation.
@@ -59,6 +63,7 @@ class FirstFragment : Fragment() {
     private lateinit var soundPool: SoundPool
 
     private val callbackUrl = "callback://"
+    private val WEBVIEW_BOTTOM_URL_DEFAULT = "https://maps.gsi.go.jp/"
 
     private var bypassTwitter = false
     private var isDebugMode = false
@@ -218,8 +223,10 @@ class FirstFragment : Fragment() {
             val linearLayoutTweet = createdView.findViewById<LinearLayout>(R.id.linear_layout_tweet)
             val linearLayoutLocation =
                 createdView.findViewById<LinearLayout>(R.id.linear_layout_location)
+            val linearLayoutWebview = createdView.findViewById<LinearLayout>(R.id.linear_layout_webview)
 
-            linearLayoutLocation.visibility = View.INVISIBLE
+            linearLayoutLocation.visibility = View.GONE
+            linearLayoutWebview.visibility = View.GONE
 
             // 認証済みか否かで、UIの可視状態を切り替え
             if (bypassTwitter || (accessKey.length > 40 && accessSecret.length > 40)) {
@@ -369,6 +376,39 @@ class FirstFragment : Fragment() {
                 }
                 linearLayoutFirst.visibility = View.VISIBLE
                 linearLayoutTweet.visibility = View.GONE
+            }
+
+            // WebView
+            val url = sharedPreferences.getString("pref_webview_bottom_url", "") ?: WEBVIEW_BOTTOM_URL_DEFAULT
+            if(url!="" && url.startsWith("http")) {
+                if (isDebugMode) {
+                    Log.v(
+                        packageNameString,
+                        "initialize() WebView url: $url"
+                    )
+                }
+
+                val WebViewBottom: WebView = createdView.findViewById<WebView>(R.id.webview_bottom)
+                WebViewBottom.setWebViewClient(object : WebViewClient() {
+                    override fun shouldOverrideUrlLoading(
+                        view: WebView,
+                        url: String
+                    ): Boolean {
+                        return false
+                    }
+                })
+                WebViewBottom.setWebChromeClient(object : WebChromeClient() {
+                    override fun onGeolocationPermissionsShowPrompt(
+                        origin: String?,
+                        callback: Callback
+                    ) {
+                        callback.invoke(origin, true, false)
+                    }
+                })
+                val webSettings: WebSettings = WebViewBottom.getSettings()
+                webSettings.javaScriptEnabled = true
+                webSettings.setGeolocationEnabled(true)
+                WebViewBottom.loadUrl(url)
             }
         }
     }

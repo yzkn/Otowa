@@ -106,4 +106,7 @@
     <string name="weather_forecast_base_url_default_ld">http://weather.livedoor.com/forecast/webservice/json/v1/</string>
     <string name="weather_forecast_empty" />
     <string name="weather_summary" />
+    <string name="webview">WebView</string>
+    <string name="webview_bottom_url_default">https://maps.gsi.go.jp/</string>
+    <string name="webview_bottom_url">URL</string>
 </resources><!-- Copyright (c) 2021 YA-androidapp(https://github.com/YA-androidapp) All rights reserved. -->

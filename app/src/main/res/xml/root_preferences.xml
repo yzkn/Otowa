@@ -124,6 +124,20 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        app:summary="@string/weather_summary"
+        app:title="@string/webview">
+
+        <EditTextPreference
+            android:defaultValue="@string/webview_bottom_url_default"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            app:key="pref_webview_bottom_url"
+            app:title="@string/webview_bottom_url"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
         app:summary="@string/app_summary"
         app:title="@string/app">
 

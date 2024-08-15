@@ -138,6 +138,23 @@
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/linear_layout_webview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="420dp"
+            android:orientation="horizontal">
+            <WebView
+                android:id="@+id/webview_bottom"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
         android:id="@+id/linear_layout_location"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
