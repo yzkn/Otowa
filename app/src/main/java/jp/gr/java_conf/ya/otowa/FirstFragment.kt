@@ -347,6 +347,7 @@ class FirstFragment : Fragment() {
                     playSound(loadedSoundNotify)
                 }
 
+                changeKeepOnScreen()
                 changeScreenBrightness()
                 initializeSensors()
                 initializeLoggingButton()
@@ -509,6 +510,29 @@ class FirstFragment : Fragment() {
                         }, s, SensorManager.SENSOR_DELAY_NORMAL
                     )
                 }
+            }
+        }
+    }
+
+    private fun changeKeepOnScreen() {
+        if (isDebugMode) {
+            Log.v(packageNameString, "changeKeepOnScreen()")
+        }
+
+        val batteryInfo: Intent = activity?.registerReceiver(
+            null, IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+        ) ?: return
+        val plugged = batteryInfo.getIntExtra(EXTRA_PLUGGED, -1)
+        if (isDebugMode) {
+            Log.v(packageNameString, "changeKeepOnScreen() plugged: $plugged")
+        }
+
+        when (plugged) {
+            BATTERY_PLUGGED_AC, BATTERY_PLUGGED_USB, BATTERY_PLUGGED_WIRELESS -> {
+                activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            }
+            else -> {
+                activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             }
         }
     }
