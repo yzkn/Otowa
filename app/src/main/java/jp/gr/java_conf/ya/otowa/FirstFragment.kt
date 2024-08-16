@@ -66,6 +66,7 @@ class FirstFragment : Fragment() {
     private val WEBVIEW_BOTTOM_URL_DEFAULT = "https://maps.gsi.go.jp/"
 
     private var bypassTwitter = false
+    private var bypassTwitterWebView = false
     private var isDebugMode = false
     private var loadedSoundDeleted = -1
     private var loadedSoundNotify = -1
@@ -792,74 +793,97 @@ class FirstFragment : Fragment() {
         if (tweetText != "") {
             val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
             bypassTwitter = sharedPreferences.getBoolean("pref_bypass_twitter", false)
-            if (bypassTwitter) {
-                val explicitIntentsTwitter = sharedPreferences.getBoolean("pref_explicit_intents_twitter", false)
-                if(explicitIntentsTwitter){
-                    val tweetIntent = Intent(Intent.ACTION_SEND)
-                        .putExtra(Intent.EXTRA_TEXT, tweetText)
-                        .setType("text/plain")
+            bypassTwitterWebView = sharedPreferences.getBoolean("pref_bypass_twitter_webview", false)
+            if(bypassTwitterWebView) {
+                if (::createdView.isInitialized) {
+                    val WebViewBottom: WebView = createdView.findViewById(R.id.webview_bottom)
+                    WebViewBottom.loadUrl(
+                        "https://twitter.com/intent/tweet?text=" + urlEncode(
+                            tweetText
+                        )
+                    )
 
-                    var resolved = false
-                    try {
+                    Thread.sleep(1000)
 
-                    val packManager: PackageManager? = getActivity()?.getPackageManager()
-                        if(packManager != null) {
-                            val resolvedInfoList: List<ResolveInfo> =
-                                packManager!!.queryIntentActivities(
-                                    tweetIntent,
-                                    PackageManager.MATCH_DEFAULT_ONLY
-                                )
+                    WebViewBottom.loadUrl("javascript:document.querySelector(\"button[data-testid='tweetButton']\").click()")
+                }
+            } else {
+                if (bypassTwitter) {
+                    val explicitIntentsTwitter =
+                        sharedPreferences.getBoolean("pref_explicit_intents_twitter", false)
+                    if (explicitIntentsTwitter) {
+                        val tweetIntent = Intent(Intent.ACTION_SEND)
+                            .putExtra(Intent.EXTRA_TEXT, tweetText)
+                            .setType("text/plain")
 
-                            for (resolveInfo in resolvedInfoList) {
-                                if (resolveInfo.activityInfo.packageName.startsWith("com.twitter.android")) {
-                                    tweetIntent.setClassName(
-                                        resolveInfo.activityInfo.packageName,
-                                        resolveInfo.activityInfo.name
+                        var resolved = false
+                        try {
+
+                            val packManager: PackageManager? = getActivity()?.getPackageManager()
+                            if (packManager != null) {
+                                val resolvedInfoList: List<ResolveInfo> =
+                                    packManager!!.queryIntentActivities(
+                                        tweetIntent,
+                                        PackageManager.MATCH_DEFAULT_ONLY
                                     )
-                                    resolved = true
-                                    break
+
+                                for (resolveInfo in resolvedInfoList) {
+                                    if (resolveInfo.activityInfo.packageName.startsWith("com.twitter.android")) {
+                                        tweetIntent.setClassName(
+                                            resolveInfo.activityInfo.packageName,
+                                            resolveInfo.activityInfo.name
+                                        )
+                                        resolved = true
+                                        break
+                                    }
+                                }
+                            }
+                        } catch (e: Exception) {
+                        }
+
+                        if (resolved) {
+                            startActivity(tweetIntent)
+                        } else {
+                            val i = Intent().putExtra(Intent.EXTRA_TEXT, tweetText)
+                                .setAction(Intent.ACTION_VIEW)
+                                .setData(
+                                    Uri.parse(
+                                        "https://twitter.com/intent/tweet?text=" + urlEncode(
+                                            tweetText
+                                        )
+                                    )
+                                )
+                            startActivity(i)
+                        }
+                    } else {
+                        Intent(Intent.ACTION_SEND)
+                            .setType("text/plain")
+                            .putExtra(Intent.EXTRA_TEXT, tweetText)
+                            .let { Intent.createChooser(it, null) }
+                            .also(::startActivity)
+                    }
+                } else {
+                    viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+                        withContext(Dispatchers.IO) {
+                            try {
+                                getTw().updateStatus(tweetText)
+                            } catch (e: TwitterException) {
+                                withContext(Dispatchers.Main) {
+                                    Toast.makeText(
+                                        activity,
+                                        e.toString(),
+                                        Toast.LENGTH_LONG
+                                    ).show()
                                 }
                             }
                         }
-                    } catch (e: Exception) {
-                    }
-
-                    if (resolved) {
-                        startActivity(tweetIntent)
-                    } else {
-                        val i = Intent().putExtra(Intent.EXTRA_TEXT, tweetText)
-                            .setAction(Intent.ACTION_VIEW)
-                            .setData(Uri.parse("https://twitter.com/intent/tweet?text=" + urlEncode(tweetText)))
-                        startActivity(i)
-                    }
-                }else {
-                    Intent(Intent.ACTION_SEND)
-                        .setType("text/plain")
-                        .putExtra(Intent.EXTRA_TEXT, tweetText)
-                        .let { Intent.createChooser(it, null) }
-                        .also(::startActivity)
-                }
-            } else {
-                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-                    withContext(Dispatchers.IO) {
-                        try {
-                            getTw().updateStatus(tweetText)
-                        } catch (e: TwitterException) {
-                            withContext(Dispatchers.Main) {
-                                Toast.makeText(
-                                    activity,
-                                    e.toString(),
-                                    Toast.LENGTH_LONG
-                                ).show()
-                            }
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(
+                                activity,
+                                getStr(R.string.tweeted) + tweetText,
+                                Toast.LENGTH_LONG
+                            ).show()
                         }
-                    }
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(
-                            activity,
-                            getStr(R.string.tweeted) + tweetText,
-                            Toast.LENGTH_LONG
-                        ).show()
                     }
                 }
             }

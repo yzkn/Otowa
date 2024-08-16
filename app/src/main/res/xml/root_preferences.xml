@@ -10,6 +10,10 @@
             app:title="@string/bypass_twitter" />
 
         <SwitchPreferenceCompat
+            app:key="pref_bypass_twitter_webview"
+            app:title="@string/bypass_twitter_webview" />
+
+        <SwitchPreferenceCompat
             app:key="pref_explicit_intents_twitter"
             app:title="@string/explicit_intents_twitter" />
 

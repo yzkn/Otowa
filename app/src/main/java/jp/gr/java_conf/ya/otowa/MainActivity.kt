@@ -824,6 +824,15 @@ class MainActivity : AppCompatActivity() {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
+            R.id.action_home -> {
+                val WebViewBottom = findViewById<WebView>(R.id.webview_bottom)
+                val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
+                val url = sharedPreferences.getString("pref_webview_bottom_url", "") ?: ""
+                if(url!="" && url.startsWith("http")) {
+                    WebViewBottom.loadUrl(url)
+                }
+                return true
+            }
             R.id.action_settings -> {
                 startActivity(Intent(applicationContext, SettingsActivity::class.java))
                 return true
@@ -1451,8 +1460,8 @@ $pathsCoordinatesString
     class NotificationClickedBroadcastReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (instance != null && instance is MainActivity) {
-                val buttonLocate = instance!!.findViewById<Button>(R.id.button_locate)
-                buttonLocate.performLongClick()
+                val buttonLocate = instance!!.findViewById<Button>(R.id.button_tweet_location)
+                buttonLocate.performClick()
             }
         }
     }
