@@ -1449,9 +1449,19 @@ $pathsCoordinatesString
         }
 
         if (requestCode == WRITE_REQUEST_CODE && resultCode == RESULT_OK) {
-            data?.data?.let { uri ->
-                contentResolver.openOutputStream(uri).use { outputStream ->
-                    outputStream?.write(safContent.toByteArray())
+            try {
+                data?.data?.let { uri ->
+                    contentResolver.openOutputStream(uri).use { outputStream ->
+                        outputStream?.write(safContent.toByteArray())
+                        outputStream?.close()
+                    }
+                }
+            } catch (e: Exception) {
+                if (isDebugMode) {
+                    Log.e(
+                        packageNameString,
+                        "onActivityResult() Stream $e"
+                    )
                 }
             }
         }
