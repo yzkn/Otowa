@@ -1201,7 +1201,7 @@ class MainActivity : AppCompatActivity() {
         val sep = System.getProperty("line.separator")
 
         sbFileContent.append(
-            KmlUtil.KmlHeader.trimIndent()
+            KmlUtil.KmlHeader
         ).append(sep)
 
         var routeNumber = 0
@@ -1301,7 +1301,7 @@ class MainActivity : AppCompatActivity() {
 							</Data>
 						</ExtendedData>
 					</Placemark>
-                    """.trimIndent()
+                    """
                         pathsCoordinatesString += coordinatesString + System.getProperty("line.separator")
                     }
                 }
@@ -1338,13 +1338,13 @@ $pathsCoordinatesString
 					</LineString>
 				</Placemark>
 			</Folder>
-            """.trimIndent()
+            """
                 ).append(sep)
             }
         }
 
         sbFileContent.append(
-            KmlUtil.KmlFooter.trimIndent()
+            KmlUtil.KmlFooter
         )
 
         val concatFilename = sbFileName.toString()
